@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:habo/navigation/routes.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:habo/location/local_server.dart';
-import 'package:habo/location/city_generator.dart';
-import 'package:provider/provider.dart';
-import 'package:habo/habits/habits_manager.dart';
 
 class LocationScreen extends StatefulWidget {
   static MaterialPage page() {
@@ -33,14 +30,6 @@ class _LocationScreenState extends State<LocationScreen> {
   }
 
   Future<void> _initServerAndLoad() async {
-    // 1. Generate City Data from Habits
-    if (mounted) {
-        final habitsManager = Provider.of<HabitsManager>(context, listen: false);
-        final cityGen = CityGenerator(habitsManager);
-        await cityGen.generateAndSave();
-    }
-
-    // 2. Start Server
     final port = await _server.start();
     
     if (!mounted) return;
