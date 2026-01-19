@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:habo/navigation/routes.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:habo/location/local_server.dart';
+import 'package:habo/location/city_generator.dart';
+import 'package:habo/habits/habits_manager.dart';
+import 'package:provider/provider.dart';
 
 class LocationScreen extends StatefulWidget {
   static MaterialPage page() {
@@ -30,10 +33,16 @@ class _LocationScreenState extends State<LocationScreen> {
   }
 
   Future<void> _initServerAndLoad() async {
+    // 1. Start Server (extracts default assets)
     final port = await _server.start();
     
     if (!mounted) return;
 
+    // 2. Overwrite defaults with Habit Data
+    final habitsManager = Provider.of<HabitsManager>(context, listen: false);
+    await CityGenerator.generateAndSave(habitsManager.activeHabits);
+
+    // 3. Load WebView
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
