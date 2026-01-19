@@ -26,6 +26,7 @@ class HabitData {
     this.partialValue = 10.0,
     this.unit = '',
     this.categories = const [],
+    this.questions = const [],
     this.archived = false,
   });
 
@@ -54,6 +55,9 @@ class HabitData {
 
   // Categories assigned to this habit
   List<Category> categories;
+
+  // Diary questions
+  List<String> questions;
 
   // Archive status
   bool archived;

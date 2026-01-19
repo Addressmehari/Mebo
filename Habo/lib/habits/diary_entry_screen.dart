@@ -10,6 +10,7 @@ class DiaryEntryScreen extends StatefulWidget {
   final DateTime date;
   final String? existingData;
   final Function(String result) onSave;
+  final List<String> questions;
 
   const DiaryEntryScreen({
     super.key,
@@ -17,6 +18,7 @@ class DiaryEntryScreen extends StatefulWidget {
     required this.date,
     this.existingData,
     required this.onSave,
+    required this.questions,
   });
 
   @override
@@ -25,14 +27,7 @@ class DiaryEntryScreen extends StatefulWidget {
 
 class _DiaryEntryScreenState extends State<DiaryEntryScreen> {
   // Default questions for the grid diary
-  final List<String> questions = [
-    "What am I grateful for today?",
-    "What was the highlight of my day?",
-    "What did I learn today?",
-    "What could I have done better?",
-    "Mood (1-10)",
-    "Notes"
-  ];
+  late List<String> questions;
 
   Map<String, String> answers = {};
   Map<String, TextEditingController> _controllers = {};
@@ -40,6 +35,7 @@ class _DiaryEntryScreenState extends State<DiaryEntryScreen> {
   @override
   void initState() {
     super.initState();
+    questions = widget.questions;
     if (widget.existingData != null && widget.existingData!.isNotEmpty) {
       try {
         final decoded = jsonDecode(widget.existingData!);
@@ -81,9 +77,27 @@ class _DiaryEntryScreenState extends State<DiaryEntryScreen> {
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: () {
-              final jsonString = jsonEncode(answers);
-              widget.onSave(jsonString);
-              Navigator.of(context).pop();
+              // Check if at least one answer has content
+              final hasContent = answers.values.any(
+                (answer) => answer.trim().isNotEmpty
+              );
+              
+              if (hasContent) {
+                final jsonString = jsonEncode(answers);
+                widget.onSave(jsonString);
+                Navigator.of(context).pop();
+              } else {
+                // Show a message that diary is empty
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Please write at least one answer to save your diary.'),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                );
+              }
             },
           )
         ],

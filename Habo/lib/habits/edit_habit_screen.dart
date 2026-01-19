@@ -50,7 +50,18 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
   bool notification = false;
   bool showSanction = false;
   HabitType habitType = HabitType.boolean;
+  List<TextEditingController> questionControllers = [];
   List<Category> selectedCategories = [];
+  List<String> questions = [];
+  
+  final List<String> defaultQuestions = [
+    "What am I grateful for today?",
+    "What was the highlight of my day?",
+    "What did I learn today?",
+    "What could I have done better?",
+    "Mood (1-10)",
+    "Notes"
+  ];
 
   Future<void> setNotificationTime(BuildContext context) async {
     TimeOfDay? selectedTime;
@@ -176,12 +187,52 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
           numberFormatter.format(widget.habitData!.partialValue);
       unit.text = widget.habitData!.unit;
       selectedCategories = List.from(widget.habitData!.categories);
+      questions = List.from(widget.habitData!.questions);
+      if (questions.isEmpty && widget.habitData!.isDiary) {
+         questions = List.from(defaultQuestions);
+      }
+    } else {
+      // New habit, set defaults
+      questions = List.from(defaultQuestions);
     }
+    
+    // Initialize controllers for each question
+    _initQuestionControllers();
 
     // Load categories when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<HabitsManager>(context, listen: false).loadCategories();
     });
+  }
+
+  void _initQuestionControllers() {
+    // Dispose existing controllers first
+    for (var controller in questionControllers) {
+      controller.dispose();
+    }
+    questionControllers = questions.map((q) => TextEditingController(text: q)).toList();
+  }
+
+  void _addQuestion() {
+    setState(() {
+      questions.add('');
+      questionControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeQuestion(int index) {
+    setState(() {
+      questionControllers[index].dispose();
+      questionControllers.removeAt(index);
+      questions.removeAt(index);
+    });
+  }
+
+  void _syncQuestionsFromControllers() {
+    questions = questionControllers
+        .map((c) => c.text.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
   }
 
   @override
@@ -195,6 +246,9 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
     targetValue.dispose();
     partialValue.dispose();
     unit.dispose();
+    for (var controller in questionControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -272,6 +326,9 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
           return FloatingActionButton(
             onPressed: () {
               if (title.text.isNotEmpty) {
+                // Sync questions from controllers
+                _syncQuestionsFromControllers();
+
                 if (widget.habitData != null) {
                   final habitData = HabitData(
                     id: widget.habitData!.id,
@@ -294,6 +351,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     partialValue: double.tryParse(partialValue.text) ?? 10.0,
                     unit: unit.text.toString(),
                     categories: selectedCategories,
+                    questions: questions,
                   );
                   final habitsManager =
                       Provider.of<HabitsManager>(context, listen: false);
@@ -324,6 +382,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     partialValue: double.tryParse(partialValue.text) ?? 10.0,
                     unit: unit.text.toString(),
                     categories: selectedCategories,
+                    questions: questions,
                   );
                   // For new habits, we need to get the habit ID and then update categories
                   // This will be handled by updating the addHabit method to accept categories
@@ -394,7 +453,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                         ],
                       ),
                     ),
-                    if (habitType == HabitType.diary)
+                    if (habitType == HabitType.diary) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 25),
                         child: Center(
@@ -428,6 +487,88 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      // Diary Questions Header with Add Button
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 25),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Diary Questions',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _addQuestion,
+                              icon: const Icon(Icons.add_circle),
+                              color: Theme.of(context).colorScheme.primary,
+                              tooltip: 'Add Question',
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Questions List
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 25),
+                        child: Column(
+                          children: List.generate(questionControllers.length, (index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Question number
+                                  Container(
+                                    width: 28,
+                                    height: 28,
+                                    margin: const EdgeInsets.only(top: 12, right: 8),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primaryContainer,
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '${index + 1}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  // Question text field
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: questionControllers[index],
+                                      decoration: InputDecoration(
+                                        hintText: 'Enter question...',
+                                        border: const OutlineInputBorder(),
+                                        contentPadding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 12,
+                                        ),
+                                        suffixIcon: questionControllers.length > 1
+                                            ? IconButton(
+                                                onPressed: () => _removeQuestion(index),
+                                                icon: const Icon(Icons.remove_circle_outline),
+                                                color: Colors.red.shade400,
+                                                tooltip: 'Remove Question',
+                                              )
+                                            : null,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ],
                     if (habitType == HabitType.numeric) ...[
                       Container(
                         // margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),

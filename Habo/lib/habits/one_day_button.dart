@@ -517,6 +517,7 @@ class OneDayButton extends StatelessWidget {
             parent.showRewardNotification(date);
             callback();
           },
+          questions: parent.widget.habitData.questions,
         ),
       ),
     );

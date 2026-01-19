@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:habo/model/category.dart';
@@ -45,6 +46,7 @@ class Habit extends StatefulWidget {
       'targetValue': habitData.targetValue,
       'partialValue': habitData.partialValue,
       'unit': habitData.unit,
+      'questions': jsonEncode(habitData.questions),
       'archived': habitData.archived ? 1 : 0,
     };
   }
@@ -78,6 +80,7 @@ class Habit extends StatefulWidget {
       'unit': habitData.unit,
       'categories':
           habitData.categories.map((category) => category.toJson()).toList(),
+      'questions': habitData.questions,
       'archived': habitData.archived ? 1 : 0,
     };
   }
@@ -107,6 +110,9 @@ class Habit extends StatefulWidget {
               ? (json['categories'] as List)
                   .map((categoryJson) => Category.fromJson(categoryJson))
                   .toList()
+              : [],
+          questions: json['questions'] != null
+              ? List<String>.from(json['questions'])
               : [],
           archived: (json['archived'] ?? 0) != 0 ? true : false,
         );

@@ -216,7 +216,8 @@ class HabitsManager extends ChangeNotifier {
       double targetValue = 1.0,
       double partialValue = 1.0,
       String unit = '',
-      List<Category> categories = const []}) {
+      List<Category> categories = const [],
+      List<String> questions = const []}) {
     Habit newHabit = Habit(
       habitData: HabitData(
         position: allHabits.length,
@@ -238,6 +239,7 @@ class HabitsManager extends ChangeNotifier {
         partialValue: partialValue,
         unit: unit,
         categories: categories,
+        questions: questions,
       ),
     );
     _habitRepository.createHabit(newHabit).then(
@@ -283,6 +285,7 @@ class HabitsManager extends ChangeNotifier {
     hab.habitData.partialValue = habitData.partialValue;
     hab.habitData.unit = habitData.unit;
     hab.habitData.categories = habitData.categories;
+    hab.habitData.questions = habitData.questions;
     hab.habitData.archived = habitData.archived;
     _habitRepository.updateHabit(hab);
     if (habitData.notification) {

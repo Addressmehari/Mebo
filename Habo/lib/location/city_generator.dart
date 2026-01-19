@@ -183,6 +183,7 @@ class CityGenerator {
   static Map<String, dynamic> _mapDateToHouse(DateTime date, List<Habit> habits, int x, int y, String facing) {
     bool anyFail = false;
     int checkCount = 0;
+    bool hasDiaryEntry = false;
     
     // Check all habits for this specific date
     for (var habit in habits) {
@@ -193,6 +194,10 @@ class CityGenerator {
                 anyFail = true;
             } else if (dayType == DayType.check) {
                 checkCount++;
+                // Check if this is a diary habit that was filled
+                if (habit.habitData.isDiary) {
+                    hasDiaryEntry = true;
+                }
             }
         }
     }
@@ -203,6 +208,9 @@ class CityGenerator {
     // Generate Attributes based on Date Seed
     final seed = "${date.year}-${date.month}-${date.day}";
     final attrs = _generateAttributes(seed);
+
+    // House gets terrace if: 3+ habits checked OR any diary habit was filled
+    final hasTerrace = checkCount > 3 || hasDiaryEntry;
 
     return {
       "x": x,
@@ -215,7 +223,7 @@ class CityGenerator {
       "wallStyle": attrs['wallStyle'],
       "username": label,
       "facing": facing,
-      "has_terrace": checkCount > 3,
+      "has_terrace": hasTerrace,
       "abandoned": anyFail,
       "joined_at": date.toIso8601String(),
       "last_seen": DateTime.now().toIso8601String()

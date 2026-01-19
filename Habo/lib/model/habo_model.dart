@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -14,7 +15,7 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
 
 class HaboModel {
-  static const _dbVersion = 8;
+  static const _dbVersion = 9;
   Database? _db;
 
   Database get db {
@@ -149,6 +150,9 @@ class HaboModel {
               partialValue: (hab['partialValue'] ?? 1.0).toDouble(),
               unit: hab['unit'] ?? '',
               categories: categories,
+              questions: (hab['questions'] != null && hab['questions'].toString().isNotEmpty)
+                  ? List<String>.from(jsonDecode(hab['questions']))
+                  : [],
               archived: hab['archived'] == 0 ? false : true,
             ),
           ),
@@ -257,6 +261,34 @@ class HaboModel {
     batch.execute('ALTER TABLE habits ADD COLUMN archived INTEGER DEFAULT 0');
   }
 
+  void _createTableHabitsV9(Batch batch) {
+    batch.execute('DROP TABLE IF EXISTS habits');
+    batch.execute('''CREATE TABLE habits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    position INTEGER,
+    title TEXT,
+    twoDayRule INTEGER,
+    cue TEXT,
+    routine TEXT,
+    reward TEXT,
+    showReward INTEGER,
+    advanced INTEGER,
+    notification INTEGER,
+    notTime TEXT,
+    sanction TEXT,
+    showSanction INTEGER,
+    accountant TEXT,
+    habitType INTEGER DEFAULT 0,
+    targetValue REAL DEFAULT 1.0,
+    partialValue REAL DEFAULT 1.0,
+    unit TEXT DEFAULT '',
+    archived INTEGER DEFAULT 0,
+    questions TEXT DEFAULT ''
+    )''');
+  }
+
+
+
   Future<void> _updateTableCategoriesAddFontFamily(Database db) async {
     // Check if fontFamily column already exists before adding it
     final result = await db.rawQuery("PRAGMA table_info(categories)");
@@ -329,7 +361,7 @@ class HaboModel {
 
   void _onCreate(Database db, int version) {
     var batch = db.batch();
-    _createTableHabitsV6(batch);
+    _createTableHabitsV9(batch);
     _createTableEventsV4(batch);
     _createTableCategoriesV7(batch); // Use V7 with fontFamily column
     _createTableHabitCategoriesV5(batch);
@@ -370,6 +402,8 @@ class HaboModel {
     if (oldVersion == 5) {
       _updateTableHabitsV5toV6(batch);
     }
+    // Versions 6, 7, 8 don't need batch updates for questions anymore
+    // as it is handled safely after commit.
 
     // Commit batch operations first
     await batch.commit();
@@ -377,6 +411,25 @@ class HaboModel {
     // Then handle fontFamily column addition separately (requires async check)
     if (oldVersion <= 7) {
       await _updateTableCategoriesAddFontFamily(db);
+    }
+    
+    // Handle questions column addition safely
+    if (oldVersion < 9) {
+      await _updateTableHabitsAddQuestions(db);
+    }
+  }
+
+  Future<void> _updateTableHabitsAddQuestions(Database db) async {
+    try {
+      final result = await db.rawQuery("PRAGMA table_info(habits)");
+      final hasColumn = result.any((column) => column['name'] == 'questions');
+      if (!hasColumn) {
+        await db.execute("ALTER TABLE habits ADD COLUMN questions TEXT DEFAULT ''");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error adding questions column: $e');
+      }
     }
   }
 
