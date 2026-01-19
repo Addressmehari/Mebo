@@ -387,9 +387,47 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                             value: HabitType.numeric,
                             child: Text(S.of(context).numericHabit),
                           ),
+                          DropdownMenuItem(
+                             value: HabitType.diary,
+                             child: Text(S.of(context).diaryHabit),
+                           ),
                         ],
                       ),
                     ),
+                    if (habitType == HabitType.diary)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 25),
+                        child: Center(
+                          child: RichText(
+                            text: TextSpan(
+                              style: DefaultTextStyle.of(context).style,
+                              children: [
+                                TextSpan(
+                                    text: S.of(context).diaryHabitDescription),
+                                WidgetSpan(
+                                  child: Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(10, 0, 0, 0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        showSmallTooltip(
+                                            context,
+                                            S.of(context).diaryHabit,
+                                            S.of(context).diaryHabitDescription);
+                                      },
+                                      child: const Icon(
+                                        Icons.info,
+                                        color: Colors.grey,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     if (habitType == HabitType.numeric) ...[
                       Container(
                         // margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),

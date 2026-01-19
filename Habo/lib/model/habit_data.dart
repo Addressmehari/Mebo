@@ -61,6 +61,7 @@ class HabitData {
   // Helper methods for numeric habits
   bool get isNumeric => habitType == HabitType.numeric;
   bool get isBoolean => habitType == HabitType.boolean;
+  bool get isDiary => habitType == HabitType.diary;
 
   double getProgressForDate(DateTime date) {
     final event = events[date];

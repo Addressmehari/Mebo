@@ -423,6 +423,12 @@ class HabitState extends State<Habit> {
 
     switch (eventType) {
       case DayType.check:
+        if (widget.habitData.isDiary) {
+           return const Icon(
+            Icons.book,
+            color: Colors.white,
+          );
+        }
         return const Icon(
           Icons.check,
           color: Colors.white,

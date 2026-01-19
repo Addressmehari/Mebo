@@ -10,6 +10,7 @@ import 'package:habo/helpers.dart';
 import 'package:habo/settings/settings_manager.dart';
 import 'package:habo/widgets/progress_input_modal.dart';
 import 'package:provider/provider.dart';
+import 'package:habo/habits/diary_entry_screen.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class OneDayButton extends StatelessWidget {
@@ -212,7 +213,9 @@ class OneDayButton extends StatelessWidget {
                         (TapGestureRecognizer instance) {
                           instance.onTap = () {
                             parent.setSelectedDay(date);
-                            if (oneTapCheck) {
+                            if (parent.widget.habitData.isDiary) {
+                                _openDiaryEntry(context);
+                            } else if (oneTapCheck) {
                               // For numeric habits, add increment instead of full check
                               if (parent.widget.habitData.isNumeric) {
                                 _addIncrement(context);
@@ -240,7 +243,15 @@ class OneDayButton extends StatelessWidget {
                             duration: const Duration(milliseconds: 400)),
                         (LongPressGestureRecognizer instance) {
                           instance.onLongPress = () {
-                            if (oneTapCheck) {
+                            if (parent.widget.habitData.isDiary) {
+                                 // Optional: Long press to clear or just show option
+                                 // For now let's make it simple, maybe show menu with just Clear?
+                                 // Or just do nothing special vs tap.
+                                 // Let's allow menu but filtering only 'Clear' if we wanted, 
+                                 // but user said "dont show check/fail/skip". 
+                                 // So let's just open diary on long press too or do nothing.
+                                 _openDiaryEntry(context);
+                            } else if (oneTapCheck) {
                               // Show menu
                               _showMenu(context, icons, index, color,
                                   handleSelection);
@@ -483,5 +494,31 @@ class OneDayButton extends StatelessWidget {
     }
 
     callback();
+  }
+
+  void _openDiaryEntry(BuildContext context) {
+    String? existingData;
+    if (event != null && event!.length > 1) {
+      existingData = event![1];
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DiaryEntryScreen(
+          habitTitle: parent.widget.habitData.title,
+          date: date,
+          existingData: existingData,
+          onSave: (String result) {
+            Provider.of<HabitsManager>(context, listen: false)
+                .addEvent(id, date, [DayType.check, result]);
+            parent.events[date] = [DayType.check, result];
+            
+            Provider.of<SettingsManager>(context, listen: false).playCheckSound();
+            parent.showRewardNotification(date);
+            callback();
+          },
+        ),
+      ),
+    );
   }
 }

@@ -1037,6 +1037,11 @@ class S {
     );
   }
 
+  /// `Diary habit`
+  String get diaryHabit {
+    return Intl.message('Diary habit', name: 'diaryHabit', desc: '', args: []);
+  }
+
   /// `Slider`
   String get slider {
     return Intl.message('Slider', name: 'slider', desc: '', args: []);
@@ -1055,6 +1060,21 @@ class S {
       desc: '',
       args: [],
     );
+  }
+
+  /// `Diary habits allow you to record structured answers for each day.`
+  String get diaryHabitDescription {
+    return Intl.message(
+      'Diary habits allow you to record structured answers for each day.',
+      name: 'diaryHabitDescription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Questions`
+  String get questions {
+    return Intl.message('Questions', name: 'questions', desc: '', args: []);
   }
 
   /// `To track progress in smaller increments`

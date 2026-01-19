@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 enum Themes { device, light, dark, oled, materialYou }
 
-enum HabitType { boolean, numeric }
+enum HabitType { boolean, numeric, diary }
 
 enum DayType { clear, check, fail, skip, progress }
 
