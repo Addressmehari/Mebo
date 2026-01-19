@@ -109,6 +109,20 @@ class _HabitsScreenState extends State<HabitsScreen> {
             backgroundColor: Colors.transparent,
             actions: <Widget>[
               IconButton(
+                icon: const Icon(
+                  Icons.location_on,
+                  semanticLabel: 'Location',
+                ),
+                color: Colors.grey[400],
+                tooltip: 'Location',
+                onPressed: () {
+                  Provider.of<HabitsManager>(context, listen: false)
+                      .hideSnackBar();
+                  Provider.of<AppStateManager>(context, listen: false)
+                      .goLocation(true);
+                },
+              ),
+              IconButton(
                 icon: Icon(
                   Icons.archive,
                   semanticLabel: S.of(context).archivedHabits,

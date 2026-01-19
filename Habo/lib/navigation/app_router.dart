@@ -11,6 +11,7 @@ import 'package:habo/settings/settings_screen.dart';
 import 'package:habo/splash_screen.dart';
 import 'package:habo/statistics/statistics_screen.dart';
 import 'package:habo/whats_new/whats_new_screen.dart';
+import 'package:habo/location/location_screen.dart';
 
 class AppRouter extends RouterDelegate<HaboRouteConfiguration>
     with
@@ -60,6 +61,7 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
         if (appStateManager.getCreateHabit) EditHabitScreen.page(null),
         if (appStateManager.getEditHabit != null)
           EditHabitScreen.page(appStateManager.getEditHabit!),
+        if (appStateManager.getLocation) LocationScreen.page(),
         if (!allInitialized()) SplashScreen.page(),
       ],
     );
@@ -98,6 +100,10 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
       if (page.name == Routes.editHabitPath) {
         appStateManager.goEditHabit(null);
       }
+
+      if (page.name == Routes.locationPath) {
+        appStateManager.goLocation(false);
+      }
     });
   }
 
@@ -121,6 +127,9 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
     }
     if (appStateManager.getEditHabit != null) {
       return const HaboRouteConfiguration(path: '/edit');
+    }
+    if (appStateManager.getLocation) {
+      return const HaboRouteConfiguration(path: '/location');
     }
     if (appStateManager.getWhatsNew) {
       return const HaboRouteConfiguration(path: '/whatsnew');
@@ -171,6 +180,9 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
           break;
         case '/whatsnew':
           appStateManager.goWhatsNew(true);
+          break;
+        case '/location':
+          appStateManager.goLocation(true);
           break;
         case '/':
         case '/main':

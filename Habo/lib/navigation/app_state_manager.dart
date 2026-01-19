@@ -45,4 +45,12 @@ class AppStateManager extends ChangeNotifier {
     _editHabit = habitData;
     notifyListeners();
   }
+
+  bool _location = false;
+  bool get getLocation => _location;
+
+  void goLocation(bool state) {
+    _location = state;
+    notifyListeners();
+  }
 }
