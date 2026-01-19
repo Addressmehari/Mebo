@@ -68,6 +68,23 @@ class NotificationService {
     notifications.setHabitNotification(id, time, title, desc);
   }
 
+  /// Sets a smart notification with personalized motivational messages
+  void setSmartHabitNotification({
+    required int id,
+    required TimeOfDay time,
+    required String habitTitle,
+    required HabitType habitType,
+    int? currentStreak,
+  }) {
+    notifications.setSmartHabitNotification(
+      id: id,
+      timeOfDay: time,
+      habitTitle: habitTitle,
+      habitType: habitType,
+      currentStreak: currentStreak,
+    );
+  }
+
   /// Disables notification for a specific habit
   void disableHabitNotification(int id) {
     // Delegate to global notification function

@@ -259,8 +259,12 @@ class HabitsManager extends ChangeNotifier {
         }
 
         if (notification) {
-          _notificationService?.setHabitNotification(
-              id, notTime, 'Habo', title);
+          _notificationService?.setSmartHabitNotification(
+            id: id,
+            time: notTime,
+            habitTitle: title,
+            habitType: habitType,
+          );
         } else {
           _notificationService?.disableHabitNotification(id);
         }
@@ -298,8 +302,13 @@ class HabitsManager extends ChangeNotifier {
     hab.habitData.archived = habitData.archived;
     _habitRepository.updateHabit(hab);
     if (habitData.notification) {
-      _notificationService?.setHabitNotification(
-          habitData.id!, habitData.notTime, 'Habo', habitData.title);
+      _notificationService?.setSmartHabitNotification(
+        id: habitData.id!,
+        time: habitData.notTime,
+        habitTitle: habitData.title,
+        habitType: habitData.habitType,
+        currentStreak: hab.habitData.streak,
+      );
     } else {
       _notificationService?.disableHabitNotification(habitData.id!);
     }
@@ -355,8 +364,13 @@ class HabitsManager extends ChangeNotifier {
 
     // Restore notifications if enabled
     if (habit.habitData.notification) {
-      _notificationService?.setHabitNotification(
-          id, habit.habitData.notTime, 'Habo', habit.habitData.title);
+      _notificationService?.setSmartHabitNotification(
+        id: id,
+        time: habit.habitData.notTime,
+        habitTitle: habit.habitData.title,
+        habitType: habit.habitData.habitType,
+        currentStreak: habit.habitData.streak,
+      );
     }
 
     if (_uiFeedbackService != null) {

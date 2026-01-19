@@ -4,6 +4,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:habo/constants.dart';
 import 'package:habo/generated/l10n.dart';
+import 'package:habo/services/notification_messages.dart';
 
 bool platformSupportsNotifications() => Platform.isAndroid || Platform.isIOS;
 
@@ -25,7 +26,14 @@ void initializeNotifications() {
           channelDescription: 'Notification channel for habit notifications',
           defaultColor: HaboColors.primary,
           importance: NotificationImportance.Max,
-          criticalAlerts: true)
+          criticalAlerts: true),
+      NotificationChannel(
+          channelKey: 'smart_notifications_habo',
+          channelName: 'Smart habit reminders',
+          channelDescription: 'Personalized motivational reminders',
+          defaultColor: HaboColors.primary,
+          importance: NotificationImportance.High,
+          criticalAlerts: true),
     ],
   );
 }
@@ -50,6 +58,37 @@ void setHabitNotification(
     int id, TimeOfDay timeOfDay, String title, String desc) {
   _setupDailyNotification(
       id, timeOfDay, title, desc, 'habit_notifications_habo');
+}
+
+/// Set a smart notification with motivational messages
+void setSmartHabitNotification({
+  required int id,
+  required TimeOfDay timeOfDay,
+  required String habitTitle,
+  required HabitType habitType,
+  int? currentStreak,
+}) {
+  final habitTypeStr = habitType.toString().split('.').last;
+  
+  // Determine if it's late in the day (after 8 PM)
+  final now = DateTime.now();
+  final isLateInDay = now.hour >= 20;
+  
+  final smartTitle = NotificationMessages.buildSmartNotificationTitle(habitTitle, habitTypeStr);
+  final smartBody = NotificationMessages.buildSmartNotificationBody(
+    habitTitle: habitTitle,
+    habitType: habitTypeStr,
+    currentStreak: currentStreak,
+    isLateInDay: isLateInDay,
+  );
+  
+  _setupDailyNotification(
+    id, 
+    timeOfDay, 
+    smartTitle, 
+    smartBody, 
+    'smart_notifications_habo',
+  );
 }
 
 void disableHabitNotification(int id) {
