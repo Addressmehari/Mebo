@@ -359,7 +359,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "privacyPolicy": MessageLookupByLibrary.simpleMessage("Privacy Policy"),
     "progress": MessageLookupByLibrary.simpleMessage("Progress"),
     "progressOf": m13,
-    "questions": MessageLookupByLibrary.simpleMessage("Questions"),
     "reenableTouchIdFaceId": MessageLookupByLibrary.simpleMessage(
       "Please reenable your Touch ID or Face ID",
     ),
@@ -450,6 +449,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "week": MessageLookupByLibrary.simpleMessage("Week"),
     "whatsNewTitle": MessageLookupByLibrary.simpleMessage("What\'s New"),
     "whatsNewVersion": m16,
+    "yearlyOverview": MessageLookupByLibrary.simpleMessage("Yearly Overview"),
     "yourCommentHere": MessageLookupByLibrary.simpleMessage("Your note here"),
   };
 }

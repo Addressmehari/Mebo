@@ -9,11 +9,12 @@ import 'package:habo/habits/in_button.dart';
 import 'package:habo/helpers.dart';
 import 'package:habo/settings/settings_manager.dart';
 import 'package:habo/widgets/progress_input_modal.dart';
+import 'package:habo/widgets/meter_input_modal.dart';
 import 'package:provider/provider.dart';
 import 'package:habo/habits/diary_entry_screen.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-class OneDayButton extends StatelessWidget {
+class OneDayButton extends StatefulWidget {
   OneDayButton(
       {super.key,
       required date,
@@ -34,19 +35,54 @@ class OneDayButton extends StatelessWidget {
   final List? event;
 
   @override
+  State<OneDayButton> createState() => _OneDayButtonState();
+}
+
+class _OneDayButtonState extends State<OneDayButton> with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(
+        parent: _pulseController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    // Only animate if this is today's date
+    if (isSameDay(widget.date, DateTime.now())) {
+      _pulseController.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     List<InButton> icons = [
       InButton(
         key: const Key('Date'),
-        text: child ??
+        text: widget.child ??
             Text(
-              date.day.toString(),
+              widget.date.day.toString(),
               style: TextStyle(
-                color: (date.weekday > 5) ? Colors.red[300] : null,
-                fontWeight: (isSameDay(date, DateTime.now()))
+                color: (widget.date.weekday > 5) ? Colors.red[300] : null,
+                fontWeight: (isSameDay(widget.date, DateTime.now()))
                     ? FontWeight.w900
                     : FontWeight.normal,
-                fontSize: (isSameDay(date, DateTime.now())) ? 17 : null,
+                fontSize: (isSameDay(widget.date, DateTime.now())) ? 17 : null,
               ),
               textAlign: TextAlign.center,
             ),
@@ -61,7 +97,7 @@ class OneDayButton extends StatelessWidget {
         ),
       ),
       // Add plus icon for numeric habits
-      if (parent.widget.habitData.isNumeric)
+      if (widget.parent.widget.habitData.isNumeric)
         InButton(
           key: const Key('Plus'),
           icon: Icon(
@@ -100,9 +136,9 @@ class OneDayButton extends StatelessWidget {
     int index = 0;
     String comment = '';
 
-    if (event != null) {
+    if (widget.event != null) {
       // Find the index in the icons list that matches the event DayType
-      final dayType = event![0];
+      final dayType = widget.event![0];
       if (dayType != DayType.clear) {
         Key targetKey;
         switch (dayType) {
@@ -129,8 +165,8 @@ class OneDayButton extends StatelessWidget {
         }
       }
 
-      if (event!.length > 1 && event![1] != null && event![1] != '') {
-        comment = (event![1]);
+      if (widget.event!.length > 1 && widget.event![1] != null && widget.event![1] != '') {
+        comment = (widget.event![1]);
       }
     }
 
@@ -141,27 +177,27 @@ class OneDayButton extends StatelessWidget {
           value.key == const Key('Skip')) {
         // For numeric habits, Check means complete the habit fully
         if (value.key == const Key('Check') &&
-            parent.widget.habitData.isNumeric) {
+            widget.parent.widget.habitData.isNumeric) {
           Provider.of<SettingsManager>(context, listen: false).playCheckSound();
           // Complete the habit with full target value
           Provider.of<HabitsManager>(context, listen: false)
-              .addEvent(id, date, [DayType.check, comment]);
-          parent.events[date] = [DayType.check, comment];
-          parent.showRewardNotification(date);
+              .addEvent(widget.id, widget.date, [DayType.check, comment]);
+          widget.parent.events[widget.date] = [DayType.check, comment];
+          widget.parent.showRewardNotification(widget.date);
         } else {
           final dayType = _getDayTypeFromKey(value.key);
           Provider.of<HabitsManager>(context, listen: false)
-              .addEvent(id, date, [dayType, comment]);
-          parent.events[date] = [dayType, comment];
+              .addEvent(widget.id, widget.date, [dayType, comment]);
+          widget.parent.events[widget.date] = [dayType, comment];
           if (value.key == const Key('Check')) {
-            parent.showRewardNotification(date);
+            widget.parent.showRewardNotification(widget.date);
             Provider.of<SettingsManager>(context, listen: false)
                 .playCheckSound();
           } else {
             Provider.of<SettingsManager>(context, listen: false)
                 .playClickSound();
             if (value.key == const Key('Fail')) {
-              parent.showSanctionNotification(date);
+              widget.parent.showSanctionNotification(widget.date);
             }
           }
         }
@@ -173,29 +209,32 @@ class OneDayButton extends StatelessWidget {
       } else {
         if (comment != '') {
           Provider.of<HabitsManager>(context, listen: false)
-              .addEvent(id, date, [DayType.clear, comment]);
-          parent.events[date] = [DayType.clear, comment];
+              .addEvent(widget.id, widget.date, [DayType.clear, comment]);
+          widget.parent.events[widget.date] = [DayType.clear, comment];
         } else {
           Provider.of<HabitsManager>(context, listen: false)
-              .deleteEvent(id, date);
-          parent.events.remove(date);
+              .deleteEvent(widget.id, widget.date);
+          widget.parent.events.remove(widget.date);
         }
       }
-      callback();
+      widget.callback();
     }
 
     final oneTapCheck = Provider.of<SettingsManager>(context).getOneTapCheck;
+    final isToday = isSameDay(widget.date, DateTime.now());
 
-    return AspectRatio(
+    Widget buttonContent = AspectRatio(
       aspectRatio: 1,
       child: Center(
         child: Container(
           margin: const EdgeInsets.all(4.0),
           child: Material(
-            color: color,
+            color: widget.color,
             borderRadius: BorderRadius.circular(10.0),
-            elevation: 2,
-            shadowColor: Theme.of(context).shadowColor,
+            elevation: isToday ? 4 : 2,
+            shadowColor: isToday 
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
+                : Theme.of(context).shadowColor,
             child: Theme(
               data: Theme.of(context).copyWith(
                 splashColor: Colors.transparent,
@@ -212,12 +251,14 @@ class OneDayButton extends StatelessWidget {
                         () => TapGestureRecognizer(),
                         (TapGestureRecognizer instance) {
                           instance.onTap = () {
-                            parent.setSelectedDay(date);
-                            if (parent.widget.habitData.isDiary) {
+                            widget.parent.setSelectedDay(widget.date);
+                            if (widget.parent.widget.habitData.isMeter) {
+                                _openMeterInput(context);
+                            } else if (widget.parent.widget.habitData.isDiary) {
                                 _openDiaryEntry(context);
                             } else if (oneTapCheck) {
                               // For numeric habits, add increment instead of full check
-                              if (parent.widget.habitData.isNumeric) {
+                              if (widget.parent.widget.habitData.isNumeric) {
                                 _addIncrement(context);
                               } else {
                                 // Perform Check action for non-numeric habits
@@ -230,7 +271,7 @@ class OneDayButton extends StatelessWidget {
                               }
                             } else {
                               // Show menu
-                              _showMenu(context, icons, index, color,
+                              _showMenu(context, icons, index, widget.color,
                                   handleSelection);
                             }
                           };
@@ -243,7 +284,9 @@ class OneDayButton extends StatelessWidget {
                             duration: const Duration(milliseconds: 400)),
                         (LongPressGestureRecognizer instance) {
                           instance.onLongPress = () {
-                            if (parent.widget.habitData.isDiary) {
+                            if (widget.parent.widget.habitData.isMeter) {
+                                 _openMeterInput(context);
+                            } else if (widget.parent.widget.habitData.isDiary) {
                                  // Optional: Long press to clear or just show option
                                  // For now let's make it simple, maybe show menu with just Clear?
                                  // Or just do nothing special vs tap.
@@ -253,11 +296,11 @@ class OneDayButton extends StatelessWidget {
                                  _openDiaryEntry(context);
                             } else if (oneTapCheck) {
                               // Show menu
-                              _showMenu(context, icons, index, color,
+                              _showMenu(context, icons, index, widget.color,
                                   handleSelection);
                             } else {
                               // For numeric habits, add increment instead of full check
-                              if (parent.widget.habitData.isNumeric) {
+                              if (widget.parent.widget.habitData.isNumeric) {
                                 _addIncrement(context);
                               } else {
                                 // Perform Check action for non-numeric habits
@@ -288,6 +331,22 @@ class OneDayButton extends StatelessWidget {
         ),
       ),
     );
+
+    // Wrap with pulsing animation for today
+    if (isToday) {
+      return AnimatedBuilder(
+        animation: _pulseAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _pulseAnimation.value,
+            child: child,
+          );
+        },
+        child: buttonContent,
+      );
+    }
+    
+    return buttonContent;
   }
 
   void _showMenu(BuildContext context, List<InButton> icons, int selectedIndex,
@@ -355,7 +414,7 @@ class OneDayButton extends StatelessWidget {
         TextEditingController(text: comment);
 
     // Get the current event to preserve its DayType and progress value
-    final currentEvent = event;
+    final currentEvent = widget.event;
     final currentDayType = (currentEvent != null && currentEvent.isNotEmpty)
         ? currentEvent[0] as DayType
         : DayType.clear;
@@ -406,9 +465,9 @@ class OneDayButton extends StatelessWidget {
             : [currentDayType, commentController.text];
 
         Provider.of<HabitsManager>(context, listen: false)
-            .addEvent(id, date, eventData);
-        parent.events[date] = eventData;
-        callback();
+            .addEvent(widget.id, widget.date, eventData);
+        widget.parent.events[widget.date] = eventData;
+        widget.callback();
       },
     ).show();
   }
@@ -429,11 +488,11 @@ class OneDayButton extends StatelessWidget {
   }
 
   void _showProgressInputModal(BuildContext context) {
-    final habitData = parent.widget.habitData;
-    final currentProgress = habitData.getProgressForDate(date);
+    final habitData = widget.parent.widget.habitData;
+    final currentProgress = habitData.getProgressForDate(widget.date);
     // Preserve existing comment
     final existingComment =
-        (event != null && event!.length > 1) ? event![1] as String : '';
+        (widget.event != null && widget.event!.length > 1) ? widget.event![1] as String : '';
 
     showDialog(
       context: context,
@@ -447,8 +506,8 @@ class OneDayButton extends StatelessWidget {
           onProgressChanged: (double progressValue) {
             // Add progress event preserving existing comment
             Provider.of<HabitsManager>(context, listen: false).addEvent(
-                id, date, [DayType.progress, existingComment, progressValue]);
-            parent.events[date] = [
+                widget.id, widget.date, [DayType.progress, existingComment, progressValue]);
+            widget.parent.events[widget.date] = [
               DayType.progress,
               existingComment,
               progressValue
@@ -456,7 +515,7 @@ class OneDayButton extends StatelessWidget {
 
             // Play appropriate sound and show notification
             if (progressValue >= habitData.targetValue) {
-              parent.showRewardNotification(date);
+              widget.parent.showRewardNotification(widget.date);
               Provider.of<SettingsManager>(context, listen: false)
                   .playCheckSound();
             } else {
@@ -464,7 +523,7 @@ class OneDayButton extends StatelessWidget {
                   .playClickSound();
             }
 
-            callback();
+            widget.callback();
           },
         );
       },
@@ -472,54 +531,86 @@ class OneDayButton extends StatelessWidget {
   }
 
   void _addIncrement(BuildContext context) {
-    final habitData = parent.widget.habitData;
-    final currentProgress = habitData.getProgressForDate(date);
+    final habitData = widget.parent.widget.habitData;
+    final currentProgress = habitData.getProgressForDate(widget.date);
     final increment = habitData.partialValue;
     final newProgress = currentProgress + increment;
     // Preserve existing comment
     final existingComment =
-        (event != null && event!.length > 1) ? event![1] as String : '';
+        (widget.event != null && widget.event!.length > 1) ? widget.event![1] as String : '';
 
     // Add progress event with the incremented value, preserving comment
     Provider.of<HabitsManager>(context, listen: false)
-        .addEvent(id, date, [DayType.progress, existingComment, newProgress]);
-    parent.events[date] = [DayType.progress, existingComment, newProgress];
+        .addEvent(widget.id, widget.date, [DayType.progress, existingComment, newProgress]);
+    widget.parent.events[widget.date] = [DayType.progress, existingComment, newProgress];
 
     // Play appropriate sound and show notification
     if (newProgress >= habitData.targetValue) {
-      parent.showRewardNotification(date);
+      widget.parent.showRewardNotification(widget.date);
       Provider.of<SettingsManager>(context, listen: false).playCheckSound();
     } else {
       Provider.of<SettingsManager>(context, listen: false).playClickSound();
     }
 
-    callback();
+    widget.callback();
   }
 
   void _openDiaryEntry(BuildContext context) {
     String? existingData;
-    if (event != null && event!.length > 1) {
-      existingData = event![1];
+    if (widget.event != null && widget.event!.length > 1) {
+      existingData = widget.event![1];
     }
 
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => DiaryEntryScreen(
-          habitTitle: parent.widget.habitData.title,
-          date: date,
+          habitTitle: widget.parent.widget.habitData.title,
+          date: widget.date,
           existingData: existingData,
           onSave: (String result) {
             Provider.of<HabitsManager>(context, listen: false)
-                .addEvent(id, date, [DayType.check, result]);
-            parent.events[date] = [DayType.check, result];
+                .addEvent(widget.id, widget.date, [DayType.check, result]);
+            widget.parent.events[widget.date] = [DayType.check, result];
             
             Provider.of<SettingsManager>(context, listen: false).playCheckSound();
-            parent.showRewardNotification(date);
-            callback();
+            widget.parent.showRewardNotification(widget.date);
+            widget.callback();
           },
-          questions: parent.widget.habitData.questions,
+          questions: widget.parent.widget.habitData.questions,
         ),
       ),
+    );
+  }
+
+  void _openMeterInput(BuildContext context) {
+    final habitData = widget.parent.widget.habitData;
+    final currentValue = habitData.getMeterValueForDate(widget.date);
+    // Preserve existing comment
+    final existingComment =
+        (widget.event != null && widget.event!.length > 1) ? widget.event![1] as String : '';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return MeterInputModal(
+          habitTitle: habitData.title,
+          meterMin: habitData.meterMin,
+          meterMax: habitData.meterMax,
+          meterLabels: habitData.meterLabels,
+          currentValue: currentValue,
+          onValueChanged: (double meterValue) {
+            // Save meter event
+            Provider.of<HabitsManager>(context, listen: false).addEvent(
+                widget.id, widget.date, [DayType.meter, existingComment, meterValue]);
+            widget.parent.events[widget.date] = [DayType.meter, existingComment, meterValue];
+
+            // Play sound
+            Provider.of<SettingsManager>(context, listen: false).playCheckSound();
+            widget.parent.showRewardNotification(widget.date);
+            widget.callback();
+          },
+        );
+      },
     );
   }
 }

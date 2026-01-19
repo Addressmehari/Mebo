@@ -1072,11 +1072,6 @@ class S {
     );
   }
 
-  /// `Questions`
-  String get questions {
-    return Intl.message('Questions', name: 'questions', desc: '', args: []);
-  }
-
   /// `To track progress in smaller increments`
   String get partialValueDescription {
     return Intl.message(
@@ -1882,6 +1877,16 @@ class S {
     return Intl.message(
       'Habits today',
       name: 'habitsToday',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Yearly Overview`
+  String get yearlyOverview {
+    return Intl.message(
+      'Yearly Overview',
+      name: 'yearlyOverview',
       desc: '',
       args: [],
     );

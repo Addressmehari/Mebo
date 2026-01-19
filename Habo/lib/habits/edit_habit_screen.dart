@@ -63,6 +63,12 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
     "Notes"
   ];
 
+  // Meter habit fields
+  TextEditingController meterMinController = TextEditingController(text: '0');
+  TextEditingController meterMaxController = TextEditingController(text: '10');
+  List<TextEditingController> meterLabelControllers = [];
+  List<String> meterLabels = [];
+
   Future<void> setNotificationTime(BuildContext context) async {
     TimeOfDay? selectedTime;
     TimeOfDay initialTime = notTime;
@@ -191,6 +197,10 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
       if (questions.isEmpty && widget.habitData!.isDiary) {
          questions = List.from(defaultQuestions);
       }
+      // Initialize meter fields from existing data
+      meterMinController.text = widget.habitData!.meterMin.toStringAsFixed(0);
+      meterMaxController.text = widget.habitData!.meterMax.toStringAsFixed(0);
+      meterLabels = List.from(widget.habitData!.meterLabels);
     } else {
       // New habit, set defaults
       questions = List.from(defaultQuestions);
@@ -198,6 +208,9 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
     
     // Initialize controllers for each question
     _initQuestionControllers();
+    
+    // Initialize meter label controllers
+    _initMeterLabelControllers();
 
     // Load categories when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -235,6 +248,35 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
         .toList();
   }
 
+  void _initMeterLabelControllers() {
+    for (var controller in meterLabelControllers) {
+      controller.dispose();
+    }
+    meterLabelControllers = meterLabels.map((l) => TextEditingController(text: l)).toList();
+  }
+
+  void _addMeterLabel() {
+    setState(() {
+      meterLabels.add('');
+      meterLabelControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeMeterLabel(int index) {
+    setState(() {
+      meterLabelControllers[index].dispose();
+      meterLabelControllers.removeAt(index);
+      meterLabels.removeAt(index);
+    });
+  }
+
+  void _syncMeterLabelsFromControllers() {
+    meterLabels = meterLabelControllers
+        .map((c) => c.text.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+  }
+
   @override
   void dispose() {
     title.dispose();
@@ -246,7 +288,12 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
     targetValue.dispose();
     partialValue.dispose();
     unit.dispose();
+    meterMinController.dispose();
+    meterMaxController.dispose();
     for (var controller in questionControllers) {
+      controller.dispose();
+    }
+    for (var controller in meterLabelControllers) {
       controller.dispose();
     }
     super.dispose();
@@ -328,6 +375,8 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
               if (title.text.isNotEmpty) {
                 // Sync questions from controllers
                 _syncQuestionsFromControllers();
+                // Sync meter labels from controllers
+                _syncMeterLabelsFromControllers();
 
                 if (widget.habitData != null) {
                   final habitData = HabitData(
@@ -352,6 +401,9 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     unit: unit.text.toString(),
                     categories: selectedCategories,
                     questions: questions,
+                    meterMin: double.tryParse(meterMinController.text) ?? 0.0,
+                    meterMax: double.tryParse(meterMaxController.text) ?? 10.0,
+                    meterLabels: meterLabels,
                   );
                   final habitsManager =
                       Provider.of<HabitsManager>(context, listen: false);
@@ -383,6 +435,9 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     unit: unit.text.toString(),
                     categories: selectedCategories,
                     questions: questions,
+                    meterMin: double.tryParse(meterMinController.text) ?? 0.0,
+                    meterMax: double.tryParse(meterMaxController.text) ?? 10.0,
+                    meterLabels: meterLabels,
                   );
                   // For new habits, we need to get the habit ID and then update categories
                   // This will be handled by updating the addHabit method to accept categories
@@ -449,6 +504,10 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                           DropdownMenuItem(
                              value: HabitType.diary,
                              child: Text(S.of(context).diaryHabit),
+                           ),
+                          const DropdownMenuItem(
+                             value: HabitType.meter,
+                             child: Text('Meter'),
                            ),
                         ],
                       ),
@@ -568,6 +627,135 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                           }),
                         ),
                       ),
+                    ],
+                    if (habitType == HabitType.meter) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 25),
+                        child: const Text(
+                          'Configure the meter range and optional labels.',
+                          style: TextStyle(color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Min/Max Row
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 25),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: meterMinController,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Min Value',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextFormField(
+                                controller: meterMaxController,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Max Value',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Labels header
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 25),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Custom Labels (Optional)',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _addMeterLabel,
+                              icon: const Icon(Icons.add_circle),
+                              color: Theme.of(context).colorScheme.primary,
+                              tooltip: 'Add Label',
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (meterLabelControllers.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 25),
+                          child: Text(
+                            'Labels will be evenly distributed from min to max',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 25),
+                          child: Column(
+                            children: List.generate(meterLabelControllers.length, (index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 28,
+                                      height: 28,
+                                      margin: const EdgeInsets.only(right: 8),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).colorScheme.secondaryContainer,
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '${index + 1}',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: TextFormField(
+                                        controller: meterLabelControllers[index],
+                                        decoration: InputDecoration(
+                                          hintText: 'Label ${index + 1}',
+                                          border: const OutlineInputBorder(),
+                                          contentPadding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 12,
+                                          ),
+                                          suffixIcon: IconButton(
+                                            onPressed: () => _removeMeterLabel(index),
+                                            icon: const Icon(Icons.remove_circle_outline),
+                                            color: Colors.red.shade400,
+                                            tooltip: 'Remove Label',
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ],
                     ],
                     if (habitType == HabitType.numeric) ...[
                       Container(

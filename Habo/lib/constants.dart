@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 enum Themes { device, light, dark, oled, materialYou }
 
-enum HabitType { boolean, numeric, diary }
+enum HabitType { boolean, numeric, diary, meter }
 
-enum DayType { clear, check, fail, skip, progress }
+enum DayType { clear, check, fail, skip, progress, meter }
 
 class HaboColors {
   static const Color primary = Color(0xFF09BF30);

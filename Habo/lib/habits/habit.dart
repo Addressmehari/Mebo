@@ -47,6 +47,9 @@ class Habit extends StatefulWidget {
       'partialValue': habitData.partialValue,
       'unit': habitData.unit,
       'questions': jsonEncode(habitData.questions),
+      'meterMin': habitData.meterMin,
+      'meterMax': habitData.meterMax,
+      'meterLabels': jsonEncode(habitData.meterLabels),
       'archived': habitData.archived ? 1 : 0,
     };
   }
@@ -81,6 +84,9 @@ class Habit extends StatefulWidget {
       'categories':
           habitData.categories.map((category) => category.toJson()).toList(),
       'questions': habitData.questions,
+      'meterMin': habitData.meterMin,
+      'meterMax': habitData.meterMax,
+      'meterLabels': habitData.meterLabels,
       'archived': habitData.archived ? 1 : 0,
     };
   }
@@ -114,6 +120,11 @@ class Habit extends StatefulWidget {
           questions: json['questions'] != null
               ? List<String>.from(json['questions'])
               : [],
+          meterMin: (json['meterMin'] ?? 0.0).toDouble(),
+          meterMax: (json['meterMax'] ?? 10.0).toDouble(),
+          meterLabels: json['meterLabels'] != null
+              ? List<String>.from(json['meterLabels'])
+              : [],
           archived: (json['archived'] ?? 0) != 0 ? true : false,
         );
 
@@ -125,8 +136,8 @@ class Habit extends StatefulWidget {
           .firstWhere((e) => e.toString() == reformatOld(value[0]));
       final comment = value[1];
 
-      // Handle progress data for numeric habits
-      if (value.length > 2 && dayType == DayType.progress) {
+      // Handle progress/meter data for numeric and meter habits
+      if (value.length > 2 && (dayType == DayType.progress || dayType == DayType.meter)) {
         final progressValue = (value[2] as num?)?.toDouble() ?? 0.0;
         result[DateTime.parse(key)] = [dayType, comment, progressValue];
       } else {
@@ -421,6 +432,8 @@ class HabitState extends State<Habit> {
             .progressColor;
       case DayType.clear:
         return Colors.transparent;
+      case DayType.meter:
+        return Provider.of<SettingsManager>(context, listen: false).checkColor;
     }
   }
 
@@ -464,6 +477,11 @@ class HabitState extends State<Habit> {
         return _buildProgressIcon(events);
       case DayType.clear:
         return Container();
+      case DayType.meter:
+        return const Icon(
+          Icons.speed,
+          color: Colors.white,
+        );
     }
   }
 
