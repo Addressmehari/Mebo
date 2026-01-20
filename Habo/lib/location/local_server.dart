@@ -69,10 +69,10 @@ class LocalAssetServer {
       };
     }).addHandler(handler);
 
-    _server = await io.serve(pipeline, 'localhost', 0); // 0 = random free port
+    _server = await io.serve(pipeline, InternetAddress.loopbackIPv4, 0); // 0 = random free port
     _port = _server!.port;
     
-    print('Local server started at http://localhost:$_port');
+    print('Local server started at http://127.0.0.1:$_port');
     return _port;
   }
 

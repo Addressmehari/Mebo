@@ -38,12 +38,12 @@ class Statistics {
 
       bool usingTwoDayRule = false;
 
-      var lastDay = habit.habitData.events.firstKey();
+      DateTime? lastDay;
 
       habit.habitData.events.forEach(
         (key, value) {
           if (value[0] != null && value[0] != DayType.clear) {
-            if (key.difference(lastDay!).inDays > 1) {
+            if (lastDay != null && key.difference(lastDay!).inDays > 1) {
               stat.actualStreak = 0;
             }
 
@@ -100,8 +100,11 @@ class Statistics {
             generateYearIfNull(stat, key.year);
 
             if (value[0] != DayType.clear) {
-              // Track all event types including progress in monthly stats
-              stat.monthlyCheck[key.year]![value[0]]![key.month - 1]++;
+              // Track only known event types in monthly stats
+              final yearData = stat.monthlyCheck[key.year];
+              if (yearData != null && yearData.containsKey(value[0])) {
+                yearData[value[0]]![key.month - 1]++;
+              }
             }
 
             lastDay = key;

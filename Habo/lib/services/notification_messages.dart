@@ -65,9 +65,7 @@ class NotificationMessages {
   ];
 
   /// Get a random message based on time of day
-  static String getTimeBasedMessage() {
-    final hour = DateTime.now().hour;
-    
+  static String getTimeBasedMessage(int hour) {
     List<String> messages;
     if (hour >= 6 && hour < 12) {
       messages = morningMessages;
@@ -108,10 +106,11 @@ class NotificationMessages {
   static String buildSmartNotificationBody({
     required String habitTitle,
     required String habitType, // 'boolean', 'numeric', 'diary', 'meter'
+    required int hour,
     int? currentStreak,
-    bool isLateInDay = false,
   }) {
     String prefix;
+    final isLateInDay = hour >= 20;
     
     // Check for urgent situation first
     if (isLateInDay) {
@@ -131,7 +130,7 @@ class NotificationMessages {
     }
     // Default time-based message
     else {
-      prefix = getTimeBasedMessage();
+      prefix = getTimeBasedMessage(hour);
     }
     
     return '$prefix $habitTitle';

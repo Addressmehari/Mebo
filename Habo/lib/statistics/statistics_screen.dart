@@ -76,6 +76,27 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     ],
                   );
                 }
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline,
+                          color: Colors.red, size: 60),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Something went wrong',
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        snapshot.error.toString(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                );
               } else {
                 return const Center(
                   child: CircularProgressIndicator(

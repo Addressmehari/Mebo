@@ -25,7 +25,11 @@ class _MonthlyGraphState extends State<MonthlyGraph> {
   @override
   void initState() {
     super.initState();
-    year = widget.data.monthlyCheck.lastKey()!;
+    if (widget.data.monthlyCheck.isNotEmpty) {
+      year = widget.data.monthlyCheck.lastKey() ?? DateTime.now().year;
+    } else {
+      year = DateTime.now().year;
+    }
   }
 
   @override
@@ -276,10 +280,10 @@ class _MonthlyGraphState extends State<MonthlyGraph> {
     if (showSkip) width -= 2;
     if (showFail) width -= 2;
 
-    if (widget.data.monthlyCheck.isNotEmpty) {
-      for (int i = 0;
-          i < widget.data.monthlyCheck[year]![DayType.check]!.length;
-          ++i) {
+    if (widget.data.monthlyCheck.isNotEmpty &&
+        widget.data.monthlyCheck[year] != null &&
+        widget.data.monthlyCheck[year]![DayType.check] != null) {
+      for (int i = 0; i < widget.data.monthlyCheck[year]![DayType.check]!.length; ++i) {
         result.add(
           BarChartGroupData(
             x: i,

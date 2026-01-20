@@ -47,8 +47,13 @@ class NotificationService {
 
           // Only schedule notification if not completed today
           if (!isCompletedToday && !existingIds.contains(data.id)) {
-            notifications.setHabitNotification(
-                data.id!, data.notTime, 'Habo', data.title);
+            setSmartHabitNotification(
+              id: data.id!,
+              time: data.notTime,
+              habitTitle: data.title,
+              habitType: data.habitType,
+              currentStreak: data.streak,
+            );
           }
         }
       }

@@ -70,16 +70,12 @@ void setSmartHabitNotification({
 }) {
   final habitTypeStr = habitType.toString().split('.').last;
   
-  // Determine if it's late in the day (after 8 PM)
-  final now = DateTime.now();
-  final isLateInDay = now.hour >= 20;
-  
   final smartTitle = NotificationMessages.buildSmartNotificationTitle(habitTitle, habitTypeStr);
   final smartBody = NotificationMessages.buildSmartNotificationBody(
     habitTitle: habitTitle,
     habitType: habitTypeStr,
+    hour: timeOfDay.hour,
     currentStreak: currentStreak,
-    isLateInDay: isLateInDay,
   );
   
   _setupDailyNotification(
