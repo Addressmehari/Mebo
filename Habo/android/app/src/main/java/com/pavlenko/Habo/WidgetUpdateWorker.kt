@@ -13,13 +13,21 @@ class WidgetUpdateWorker(
 
     override fun doWork(): Result {
         val appWidgetManager = AppWidgetManager.getInstance(context)
-        val appWidgetIds = appWidgetManager.getAppWidgetIds(
+        
+        // Update HaboWidget
+        val haboWidgetIds = appWidgetManager.getAppWidgetIds(
             ComponentName(context, HaboWidget::class.java)
         )
-
-        // Trigger the update for all widgets
-        for (appWidgetId in appWidgetIds) {
+        for (appWidgetId in haboWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
+        }
+
+        // Update HaboWeekWidget
+        val haboWeekWidgetIds = appWidgetManager.getAppWidgetIds(
+            ComponentName(context, HaboWeekWidget::class.java)
+        )
+        for (appWidgetId in haboWeekWidgetIds) {
+            updateWeekWidget(context, appWidgetManager, appWidgetId)
         }
 
         return Result.success()
