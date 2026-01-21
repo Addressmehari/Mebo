@@ -9,6 +9,7 @@ import 'package:habo/habits/in_button.dart';
 import 'package:habo/helpers.dart';
 import 'package:habo/settings/settings_manager.dart';
 import 'package:habo/widgets/progress_input_modal.dart';
+import 'package:habo/widgets/money_input_modal.dart';
 import 'package:habo/widgets/meter_input_modal.dart';
 import 'package:provider/provider.dart';
 import 'package:habo/habits/diary_entry_screen.dart';
@@ -254,6 +255,8 @@ class _OneDayButtonState extends State<OneDayButton> with SingleTickerProviderSt
                             widget.parent.setSelectedDay(widget.date);
                             if (widget.parent.widget.habitData.isMeter) {
                                 _openMeterInput(context);
+                            } else if (widget.parent.widget.habitData.isSavings) {
+                                _openMoneyInput(context);
                             } else if (widget.parent.widget.habitData.isDiary) {
                                 _openDiaryEntry(context);
                             } else if (oneTapCheck) {
@@ -286,6 +289,8 @@ class _OneDayButtonState extends State<OneDayButton> with SingleTickerProviderSt
                           instance.onLongPress = () {
                             if (widget.parent.widget.habitData.isMeter) {
                                  _openMeterInput(context);
+                            } else if (widget.parent.widget.habitData.isSavings) {
+                                _openMoneyInput(context);
                             } else if (widget.parent.widget.habitData.isDiary) {
                                  // Optional: Long press to clear or just show option
                                  // For now let's make it simple, maybe show menu with just Clear?
@@ -599,10 +604,63 @@ class _OneDayButtonState extends State<OneDayButton> with SingleTickerProviderSt
           meterLabels: habitData.meterLabels,
           currentValue: currentValue,
           onValueChanged: (double meterValue) {
-            // Save meter event
+            final eventType = habitData.isMeter ? DayType.meter : DayType.savings;
+            // Save meter/savings event
             Provider.of<HabitsManager>(context, listen: false).addEvent(
-                widget.id, widget.date, [DayType.meter, existingComment, meterValue]);
-            widget.parent.events[widget.date] = [DayType.meter, existingComment, meterValue];
+                widget.id, widget.date, [eventType, existingComment, meterValue]);
+            widget.parent.events[widget.date] = [eventType, existingComment, meterValue];
+
+            // Play sound
+            Provider.of<SettingsManager>(context, listen: false).playCheckSound();
+            widget.parent.showRewardNotification(widget.date);
+            widget.callback();
+          },
+        );
+      },
+    );
+  }
+
+  void _openMoneyInput(BuildContext context) {
+    final habitData = widget.parent.widget.habitData;
+    
+    // Get the last known balance by searching backward from current date
+    double currentBalance = habitData.meterMin; // Default to starting amount
+    
+    // Check if there's a value for today first
+    final todayEvent = habitData.events[widget.date];
+    if (todayEvent != null && todayEvent[0] == DayType.savings && todayEvent.length > 2) {
+      currentBalance = (todayEvent[2] as double?) ?? habitData.meterMin;
+    } else {
+      // Look backward for the most recent balance
+      final sortedDates = habitData.events.keys
+          .where((date) => date.isBefore(widget.date) || date.isAtSameMomentAs(widget.date))
+          .toList()
+        ..sort((a, b) => b.compareTo(a)); // Sort descending (most recent first)
+      
+      for (final date in sortedDates) {
+        final event = habitData.events[date];
+        if (event != null && event[0] == DayType.savings && event.length > 2) {
+          currentBalance = (event[2] as double?) ?? habitData.meterMin;
+          break; // Found the most recent balance
+        }
+      }
+    }
+    
+    // Preserve existing comment
+    final existingComment =
+        (widget.event != null && widget.event!.length > 1) ? widget.event![1] as String : '';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return MoneyInputModal(
+          habitTitle: habitData.title,
+          currentBalance: currentBalance,
+          onValueChanged: (double newBalance) {
+            // Save savings event
+            Provider.of<HabitsManager>(context, listen: false).addEvent(
+                widget.id, widget.date, [DayType.savings, existingComment, newBalance]);
+            widget.parent.events[widget.date] = [DayType.savings, existingComment, newBalance];
 
             // Play sound
             Provider.of<SettingsManager>(context, listen: false).playCheckSound();

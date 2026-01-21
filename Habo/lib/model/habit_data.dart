@@ -74,6 +74,7 @@ class HabitData {
   bool get isNumeric => habitType == HabitType.numeric;
   bool get isBoolean => habitType == HabitType.boolean;
   bool get isDiary => habitType == HabitType.diary;
+  bool get isSavings => habitType == HabitType.savings;
   bool get isMeter => habitType == HabitType.meter;
 
   double getProgressForDate(DateTime date) {
@@ -91,7 +92,8 @@ class HabitData {
     final event = events[date];
     if (event == null) return meterMin;
 
-    if (event[0] == DayType.meter && event.length > 2) {
+    if ((event[0] == DayType.meter || event[0] == DayType.savings) &&
+        event.length > 2) {
       return (event[2] as double?) ?? meterMin;
     }
     return meterMin;
@@ -116,6 +118,11 @@ class HabitData {
     } else if (isMeter) {
       final event = events[date];
       return event != null && event[0] == DayType.meter;
+    } else if (isSavings) {
+      final event = events[date];
+      return event != null &&
+          event[0] == DayType.savings &&
+          (event[2] as double? ?? 0.0) > 0;
     } else {
       return getProgressForDate(date) >= targetValue;
     }

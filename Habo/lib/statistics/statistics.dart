@@ -12,6 +12,8 @@ class StatisticsData {
   int fails = 0;
   int progress = 0;
   int meter = 0; // Add meter as separate category
+  int savings = 0; // Add savings as separate category
+  double totalValue = 0; // Track amount saved
   SplayTreeMap<int, Map<DayType, List<int>>> monthlyCheck = SplayTreeMap();
 }
 
@@ -20,7 +22,9 @@ class OverallStatisticsData {
   int skips = 0;
   int fails = 0;
   int progress = 0;
-  int meter = 0; // Add meter as separate category
+  int meter = 0; 
+  int savings = 0; // Separate category for savings
+  double totalValue = 0; // Total amount saved
 }
 
 class AllStatistics {
@@ -106,6 +110,18 @@ class Statistics {
                 }
                 usingTwoDayRule = false;
                 break;
+              case DayType.savings:
+                stat.savings++;
+                if (value.length > 2) {
+                  stat.totalValue += (value[2] as num?)?.toDouble() ?? 0.0;
+                }
+                // Savings maintain streak
+                stat.actualStreak++;
+                if (stat.actualStreak > stat.topStreak) {
+                  stat.topStreak = stat.actualStreak;
+                }
+                usingTwoDayRule = false;
+                break;
             }
 
             generateYearIfNull(stat, key.year);
@@ -129,7 +145,9 @@ class Statistics {
       stats.total.fails += stat.fails;
       stats.total.skips += stat.skips;
       stats.total.progress += stat.progress;
-      stats.total.meter += stat.meter; // Add meter to totals
+      stats.total.meter += stat.meter;
+      stats.total.savings += stat.savings;
+      stats.total.totalValue += stat.totalValue; // Total savings
     }
     return stats;
   }
@@ -141,7 +159,8 @@ class Statistics {
         DayType.skip: List.filled(12, 0),
         DayType.fail: List.filled(12, 0),
         DayType.progress: List.filled(12, 0),
-        DayType.meter: List.filled(12, 0), // Add meter tracking
+        DayType.meter: List.filled(12, 0),
+        DayType.savings: List.filled(12, 0), // Add savings tracking
       };
     }
   }

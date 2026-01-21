@@ -19,6 +19,7 @@ class _MonthlyGraphState extends State<MonthlyGraph> {
   bool showCheck = true;
   bool showProgress = true;
   bool showMeter = true;
+  bool showSavings = true;
   bool showSkip = true;
   bool showFail = true;
   int year = DateTime.now().year;
@@ -308,10 +309,11 @@ class _MonthlyGraphState extends State<MonthlyGraph> {
 
     double width = 10;
     if (showCheck) width -= 2;
-    if (showProgress) width -= 1.8;
-    if (showMeter) width -= 1.8;
-    if (showSkip) width -= 1.8;
-    if (showFail) width -= 1.8;
+    if (showProgress) width -= 1.5;
+    if (showMeter) width -= 1.5;
+    if (showSavings) width -= 1.5;
+    if (showSkip) width -= 1.5;
+    if (showFail) width -= 1.5;
 
     if (widget.data.monthlyCheck.isNotEmpty &&
         widget.data.monthlyCheck[year] != null &&
@@ -345,6 +347,13 @@ class _MonthlyGraphState extends State<MonthlyGraph> {
                       .checkColor,
                   width: width,
                 ),
+              if (showSavings)
+                BarChartRodData(
+                  toY: widget.data.monthlyCheck[year]![DayType.savings]![i]
+                      .toDouble(),
+                  color: Colors.amber,
+                  width: width,
+                ),
               if (showSkip)
                 BarChartRodData(
                   toY: widget.data.monthlyCheck[year]![DayType.skip]![i]
@@ -361,7 +370,7 @@ class _MonthlyGraphState extends State<MonthlyGraph> {
                       .failColor,
                   width: width,
                 ),
-              if (!showCheck && !showProgress && !showMeter && !showSkip && !showFail)
+              if (!showCheck && !showProgress && !showMeter && !showSavings && !showSkip && !showFail)
                 BarChartRodData(
                   toY: 0,
                   color: Colors.transparent,

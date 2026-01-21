@@ -94,6 +94,18 @@ class StatisticsCard extends StatelessWidget {
             const SizedBox(
               height: 16,
             ),
+            if (data.totalValue > 0)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Text(
+                  '₹${data.totalValue.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber,
+                  ),
+                ),
+              ),
             Wrap(
               alignment: WrapAlignment.spaceEvenly,
               children: [
@@ -192,6 +204,25 @@ class StatisticsCard extends StatelessWidget {
                     ),
                     Text(
                       data.meter.toString(),
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.savings,
+                      color: Colors.amber,
+                    ),
+                    Text(
+                      data.savings.toString(),
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,

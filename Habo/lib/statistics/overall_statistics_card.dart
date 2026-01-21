@@ -57,6 +57,30 @@ class OverallStatisticsCard extends StatelessWidget {
                 ],
               ),
             ),
+            if (total.totalValue > 0)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Column(
+                  children: [
+                    Text(
+                      'Total Saved',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      '₹${total.totalValue.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(
               height: 22,
             ),
@@ -165,6 +189,23 @@ class OverallStatisticsCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(width: 10),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.savings,
+                      color: Colors.amber,
+                    ),
+                    Text(
+                      total.savings.toString(),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ],
@@ -236,6 +277,20 @@ class OverallStatisticsCard extends StatelessWidget {
           value: total.meter.toDouble(),
           badgeWidget: const Icon(
             Icons.speed,
+            color: Colors.white,
+            size: 16,
+          ),
+          title: '',
+          radius: 25.0,
+          titleStyle: const TextStyle(
+              fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+      if (total.savings != 0)
+        PieChartSectionData(
+          color: Colors.amber,
+          value: total.savings.toDouble(),
+          badgeWidget: const Icon(
+            Icons.savings,
             color: Colors.white,
             size: 16,
           ),

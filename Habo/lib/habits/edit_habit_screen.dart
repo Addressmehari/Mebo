@@ -509,6 +509,10 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                              value: HabitType.meter,
                              child: Text('Meter'),
                            ),
+                          const DropdownMenuItem(
+                            value: HabitType.savings,
+                            child: Text('Money Tracker'),
+                          ),
                         ],
                       ),
                     ),
@@ -625,6 +629,49 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                               ),
                             );
                           }),
+                        ),
+                      ),
+                    ],
+                    if (habitType == HabitType.savings) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 25),
+                        child: const Text(
+                          'Track your wallet balance. Add or subtract money each day.',
+                          style: TextStyle(color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Min/Max Row
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 25),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: meterMinController,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Minimum Balance',
+                                  border: OutlineInputBorder(),
+                                  helperText: 'e.g., 0',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextFormField(
+                                controller: meterMaxController,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Maximum Balance',
+                                  border: OutlineInputBorder(),
+                                  helperText: 'e.g., 1000',
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

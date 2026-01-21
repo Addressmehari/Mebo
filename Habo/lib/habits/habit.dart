@@ -355,6 +355,16 @@ class HabitState extends State<Habit> {
                   );
                 },
                 markerBuilder: (context, date, events) {
+                  // For savings habits, always show the marker (with carry-forward)
+                  if (widget.habitData.isSavings) {
+                    return AspectRatio(
+                      aspectRatio: 1,
+                      child: IgnorePointer(
+                        child: _buildSavingsMarker(date, events),
+                      ),
+                    );
+                  }
+                  
                   if (events.isNotEmpty) {
                     return _buildEventsMarker(date, events);
                   } else {
@@ -377,7 +387,9 @@ class HabitState extends State<Habit> {
           (events[0] != DayType.clear)
               ? (events[0] == DayType.meter)
                   ? _buildMeterMarker(date, events)
-                  : Container(
+                  : (events[0] == DayType.savings)
+                      ? _buildSavingsMarker(date, events)
+                      : Container(
                       margin: const EdgeInsets.all(4.0),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
@@ -436,6 +448,8 @@ class HabitState extends State<Habit> {
         return Colors.transparent;
       case DayType.meter:
         return Provider.of<SettingsManager>(context, listen: false).checkColor;
+      case DayType.savings:
+        return Colors.amber;
     }
   }
 
@@ -481,6 +495,8 @@ class HabitState extends State<Habit> {
         return Container();
       case DayType.meter:
         return _buildMeterIcon(events);
+      case DayType.savings:
+        return _buildSavingsIcon(events);
     }
   }
 
@@ -586,6 +602,112 @@ class HabitState extends State<Habit> {
             // The icon/text
             Center(
               child: _buildMeterIcon(events),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSavingsIcon(List events) {
+    if (events.length > 2 && widget.habitData.isSavings) {
+      final value = (events[2] as num?)?.toDouble() ?? 0.0;
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.savings, size: 14, color: Colors.white),
+          Text(
+            '₹${value.toInt()}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      );
+    }
+    return const Icon(
+      Icons.savings,
+      color: Colors.white,
+      size: 18,
+    );
+  }
+
+  Widget _buildSavingsMarker(DateTime date, List events) {
+    // Get the actual balance for this date (carry forward if needed)
+    double value = widget.habitData.meterMin;
+    
+    if (events.length > 2 && events[0] == DayType.savings) {
+      value = (events[2] as num?)?.toDouble() ?? widget.habitData.meterMin;
+    } else {
+      // Look backward for the most recent balance
+      final sortedDates = widget.habitData.events.keys
+          .where((d) => d.isBefore(date) || d.isAtSameMomentAs(date))
+          .toList()
+        ..sort((a, b) => b.compareTo(a));
+      
+      for (final d in sortedDates) {
+        final event = widget.habitData.events[d];
+        if (event != null && event[0] == DayType.savings && event.length > 2) {
+          value = (event[2] as num?)?.toDouble() ?? widget.habitData.meterMin;
+          break;
+        }
+      }
+    }
+    
+    final range = widget.habitData.meterMax - widget.habitData.meterMin;
+    final percentage =
+        (range > 0) ? ((value - widget.habitData.meterMin) / range).clamp(0.0, 1.0) : 1.0;
+
+    return Container(
+      margin: const EdgeInsets.all(4.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(10.0),
+        border: Border.all(
+          color: Colors.amber.shade700.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(9.0),
+        child: Stack(
+          children: [
+            // Filling background (vertical progress) - Gold color
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: FractionallySizedBox(
+                heightFactor: percentage,
+                widthFactor: 1.0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.amber.shade700, Colors.orange.shade600],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // The icon showing current value
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.savings, size: 14, color: Colors.white),
+                  if (value > 0)
+                    Text(
+                      '₹${value.toInt()}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ],
         ),
