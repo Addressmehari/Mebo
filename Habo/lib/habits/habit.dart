@@ -389,15 +389,17 @@ class HabitState extends State<Habit> {
                   ? _buildMeterMarker(date, events)
                   : (events[0] == DayType.savings)
                       ? _buildSavingsMarker(date, events)
-                      : Container(
-                      margin: const EdgeInsets.all(4.0),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: _getEventColor(events),
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: _getEventIcon(events),
-                    )
+                      : (events[0] == DayType.check && widget.habitData.isDiary)
+                          ? _buildDiaryMarker(date, events)
+                          : Container(
+                          margin: const EdgeInsets.all(4.0),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: _getEventColor(events),
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          child: _getEventIcon(events),
+                        )
               : Container(),
           (events[1] != null && events[1] != '')
               ? Container(
@@ -700,6 +702,87 @@ class HabitState extends State<Habit> {
                   if (value > 0)
                     Text(
                       '₹${value.toInt()}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDiaryMarker(DateTime date, List events) {
+    // Parse the diary data directly from the events
+    int filledCount = 0;
+    final totalQuestions = widget.habitData.questions.length;
+
+    if (events.length > 1 && events[1] != null && events[1] != '') {
+      try {
+        final data = events[1] as String;
+        final decoded = jsonDecode(data);
+
+        if (decoded is Map<String, dynamic>) {
+          // Count how many questions have non-empty answers
+          for (var question in widget.habitData.questions) {
+            final answer = decoded[question];
+            if (answer != null && answer.toString().trim().isNotEmpty) {
+              filledCount++;
+            }
+          }
+        }
+      } catch (e) {
+        // If parsing fails, consider it partially filled
+        filledCount = (totalQuestions / 2).round();
+      }
+    }
+
+    final fillPercentage = totalQuestions > 0 ? filledCount / totalQuestions : 0.0;
+
+    return Container(
+      margin: const EdgeInsets.all(4.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(10.0),
+        border: Border.all(
+          color: Provider.of<SettingsManager>(context, listen: false)
+              .checkColor
+              .withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(9.0),
+        child: Stack(
+          children: [
+            // Filling background (vertical progress)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: FractionallySizedBox(
+                heightFactor: fillPercentage,
+                widthFactor: 1.0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Provider.of<SettingsManager>(context, listen: false)
+                        .checkColor,
+                  ),
+                ),
+              ),
+            ),
+            // The icon/text
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.book, size: 14, color: Colors.white),
+                  if (totalQuestions > 0)
+                    Text(
+                      '$filledCount/$totalQuestions',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

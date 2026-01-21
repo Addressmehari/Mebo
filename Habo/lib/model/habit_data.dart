@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:habo/constants.dart';
@@ -126,5 +127,70 @@ class HabitData {
     } else {
       return getProgressForDate(date) >= targetValue;
     }
+  }
+
+  // Get diary fill percentage (0.0 to 1.0) based on how many questions are answered
+  double getDiaryFillPercentage(DateTime date) {
+    if (!isDiary || questions.isEmpty) return 0.0;
+    
+    final event = events[date];
+    if (event == null || event.length < 2 || event[1] == null || event[1] == '') {
+      return 0.0;
+    }
+    
+    try {
+      // Try to parse the diary data as JSON
+      final data = event[1] as String;
+      final decoded = jsonDecode(data);
+      
+      if (decoded is Map<String, dynamic>) {
+        // Count how many questions have non-empty answers
+        int filledCount = 0;
+        for (var question in questions) {
+          final answer = decoded[question];
+          if (answer != null && answer.toString().trim().isNotEmpty) {
+            filledCount++;
+          }
+        }
+        return filledCount / questions.length;
+      }
+    } catch (e) {
+      // If JSON parsing fails, assume it's old plain text format
+      // In that case, if there's any text, consider it as partially filled (0.5)
+      return 0.5;
+    }
+    
+    return 0.0;
+  }
+
+  // Get the number of filled questions in a diary entry
+  int getDiaryFilledCount(DateTime date) {
+    if (!isDiary || questions.isEmpty) return 0;
+    
+    final event = events[date];
+    if (event == null || event.length < 2 || event[1] == null || event[1] == '') {
+      return 0;
+    }
+    
+    try {
+      final data = event[1] as String;
+      final decoded = jsonDecode(data);
+      
+      if (decoded is Map<String, dynamic>) {
+        int filledCount = 0;
+        for (var question in questions) {
+          final answer = decoded[question];
+          if (answer != null && answer.toString().trim().isNotEmpty) {
+            filledCount++;
+          }
+        }
+        return filledCount;
+      }
+    } catch (e) {
+      // Fallback for old format
+      return 1;
+    }
+    
+    return 0;
   }
 }
