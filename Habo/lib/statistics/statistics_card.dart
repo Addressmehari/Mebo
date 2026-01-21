@@ -178,6 +178,27 @@ class StatisticsCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.speed,
+                      color:
+                          Provider.of<SettingsManager>(context, listen: false)
+                              .checkColor,
+                    ),
+                    Text(
+                      data.meter.toString(),
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(

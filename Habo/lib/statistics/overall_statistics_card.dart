@@ -144,6 +144,27 @@ class OverallStatisticsCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.speed,
+                      color:
+                          Provider.of<SettingsManager>(context, listen: false)
+                              .checkColor,
+                    ),
+                    Text(
+                      total.meter.toString(),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ],
@@ -202,6 +223,21 @@ class OverallStatisticsCard extends StatelessWidget {
           badgeWidget: const Icon(
             Icons.close,
             color: Colors.white,
+          ),
+          title: '',
+          radius: 25.0,
+          titleStyle: const TextStyle(
+              fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+      if (total.meter != 0)
+        PieChartSectionData(
+          color:
+              Provider.of<SettingsManager>(context, listen: false).checkColor,
+          value: total.meter.toDouble(),
+          badgeWidget: const Icon(
+            Icons.speed,
+            color: Colors.white,
+            size: 16,
           ),
           title: '',
           radius: 25.0,

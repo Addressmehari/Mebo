@@ -10,7 +10,8 @@ class StatisticsData {
   int checks = 0;
   int skips = 0;
   int fails = 0;
-  int progress = 0; // Add progress as separate category
+  int progress = 0;
+  int meter = 0; // Add meter as separate category
   SplayTreeMap<int, Map<DayType, List<int>>> monthlyCheck = SplayTreeMap();
 }
 
@@ -18,7 +19,8 @@ class OverallStatisticsData {
   int checks = 0;
   int skips = 0;
   int fails = 0;
-  int progress = 0; // Add progress as separate category
+  int progress = 0;
+  int meter = 0; // Add meter as separate category
 }
 
 class AllStatistics {
@@ -95,6 +97,15 @@ class Statistics {
                   stat.actualStreak = 0;
                 }
                 break;
+              case DayType.meter:
+                stat.meter++;
+                // Meter entries always maintain streak
+                stat.actualStreak++;
+                if (stat.actualStreak > stat.topStreak) {
+                  stat.topStreak = stat.actualStreak;
+                }
+                usingTwoDayRule = false;
+                break;
             }
 
             generateYearIfNull(stat, key.year);
@@ -117,7 +128,8 @@ class Statistics {
       stats.total.checks += stat.checks;
       stats.total.fails += stat.fails;
       stats.total.skips += stat.skips;
-      stats.total.progress += stat.progress; // Add progress to totals
+      stats.total.progress += stat.progress;
+      stats.total.meter += stat.meter; // Add meter to totals
     }
     return stats;
   }
@@ -128,7 +140,8 @@ class Statistics {
         DayType.check: List.filled(12, 0),
         DayType.skip: List.filled(12, 0),
         DayType.fail: List.filled(12, 0),
-        DayType.progress: List.filled(12, 0), // Add progress tracking
+        DayType.progress: List.filled(12, 0),
+        DayType.meter: List.filled(12, 0), // Add meter tracking
       };
     }
   }

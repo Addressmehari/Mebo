@@ -375,15 +375,17 @@ class HabitState extends State<Habit> {
       child: IgnorePointer(
         child: Stack(children: [
           (events[0] != DayType.clear)
-              ? Container(
-                  margin: const EdgeInsets.all(4.0),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: _getEventColor(events),
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  child: _getEventIcon(events),
-                )
+              ? (events[0] == DayType.meter)
+                  ? _buildMeterMarker(date, events)
+                  : Container(
+                      margin: const EdgeInsets.all(4.0),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _getEventColor(events),
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: _getEventIcon(events),
+                    )
               : Container(),
           (events[1] != null && events[1] != '')
               ? Container(
@@ -478,10 +480,7 @@ class HabitState extends State<Habit> {
       case DayType.clear:
         return Container();
       case DayType.meter:
-        return const Icon(
-          Icons.speed,
-          color: Colors.white,
-        );
+        return _buildMeterIcon(events);
     }
   }
 
@@ -524,6 +523,73 @@ class HabitState extends State<Habit> {
       Icons.trending_up,
       color: Colors.white,
       size: 20,
+    );
+  }
+
+  Widget _buildMeterIcon(List events) {
+    if (events.length > 2 && widget.habitData.isMeter) {
+      final value = (events[2] as num?)?.toDouble() ?? 0.0;
+      return Center(
+        child: Text(
+          '${value.toInt()}',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+      );
+    }
+    return const Icon(
+      Icons.speed,
+      color: Colors.white,
+    );
+  }
+
+  Widget _buildMeterMarker(DateTime date, List events) {
+    final value =
+        (events.length > 2) ? (events[2] as num?)?.toDouble() ?? 0.0 : 0.0;
+    final range = widget.habitData.meterMax - widget.habitData.meterMin;
+    final percentage =
+        (range > 0) ? ((value - widget.habitData.meterMin) / range).clamp(0.0, 1.0) : 1.0;
+
+    return Container(
+      margin: const EdgeInsets.all(4.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(10.0),
+        border: Border.all(
+          color: Provider.of<SettingsManager>(context, listen: false)
+              .checkColor
+              .withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(9.0), // Slightly smaller than container to hide edges
+        child: Stack(
+          children: [
+            // Filling background (vertical progress)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: FractionallySizedBox(
+                heightFactor: percentage,
+                widthFactor: 1.0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Provider.of<SettingsManager>(context, listen: false)
+                        .checkColor,
+                  ),
+                ),
+              ),
+            ),
+            // The icon/text
+            Center(
+              child: _buildMeterIcon(events),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
