@@ -32,7 +32,10 @@ class HabitData {
     this.meterMax = 10.0,
     this.meterLabels = const [],
     this.archived = false,
-  });
+    this.is24Hour = false,
+    this.description = '',
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   SplayTreeMap<DateTime, List> events;
   int streak = 0;
@@ -70,6 +73,11 @@ class HabitData {
 
   // Archive status
   bool archived;
+
+  // 24-hour temporary task
+  bool is24Hour;
+  DateTime createdAt;
+  String description; // Description for 24-hour tasks
 
   // Helper methods for habit types
   bool get isNumeric => habitType == HabitType.numeric;

@@ -7,6 +7,7 @@ import 'package:habo/habits/habits_manager.dart';
 import 'package:habo/model/category.dart';
 import 'package:habo/settings/settings_manager.dart';
 import 'package:habo/widgets/category_filter_row.dart';
+import 'package:habo/widgets/hour_24_stories.dart';
 import 'package:provider/provider.dart';
 
 class CalendarColumn extends StatefulWidget {
@@ -22,8 +23,16 @@ class _CalendarColumnState extends State<CalendarColumn> {
   @override
   Widget build(BuildContext context) {
     final habitsManager = Provider.of<HabitsManager>(context);
-    final List<Habit> calendars =
-        habitsManager.getHabitsByCategory(selectedCategory);
+    
+    // Separate 24-hour habits from regular habits
+    final all24HourHabits = habitsManager.getAllHabits
+        .where((habit) => !habit.habitData.archived && habit.habitData.is24Hour)
+        .toList();
+    
+    // Get non-24-hour habits for the main list (filtered by category)
+    final calendars = habitsManager.getHabitsByCategory(selectedCategory)
+        .where((habit) => !habit.habitData.is24Hour)
+        .toList();
 
     return Column(
       children: <Widget>[
@@ -31,6 +40,8 @@ class _CalendarColumnState extends State<CalendarColumn> {
           padding: EdgeInsets.fromLTRB(18, 10, 18, 10),
           child: CalendarHeader(),
         ),
+        // 24-Hour Tasks Stories
+        Hour24Stories(hour24Habits: all24HourHabits),
         // Category Filter Row (conditionally shown)
         Consumer<SettingsManager>(
           builder: (context, settingsManager, child) {

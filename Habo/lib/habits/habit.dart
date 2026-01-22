@@ -51,6 +51,8 @@ class Habit extends StatefulWidget {
       'meterMax': habitData.meterMax,
       'meterLabels': jsonEncode(habitData.meterLabels),
       'archived': habitData.archived ? 1 : 0,
+      'is24Hour': habitData.is24Hour ? 1 : 0,
+      'createdAt': habitData.createdAt.toIso8601String(),
     };
   }
 
@@ -88,6 +90,8 @@ class Habit extends StatefulWidget {
       'meterMax': habitData.meterMax,
       'meterLabels': habitData.meterLabels,
       'archived': habitData.archived ? 1 : 0,
+      'is24Hour': habitData.is24Hour ? 1 : 0,
+      'createdAt': habitData.createdAt.toIso8601String(),
     };
   }
 
@@ -126,6 +130,10 @@ class Habit extends StatefulWidget {
               ? List<String>.from(json['meterLabels'])
               : [],
           archived: (json['archived'] ?? 0) != 0 ? true : false,
+          is24Hour: (json['is24Hour'] ?? 0) != 0 ? true : false,
+          createdAt: json['createdAt'] != null
+              ? DateTime.parse(json['createdAt'])
+              : DateTime.now(),
         );
 
   static SplayTreeMap<DateTime, List> doEvents(Map<String, dynamic> input) {

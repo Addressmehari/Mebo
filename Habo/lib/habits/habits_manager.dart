@@ -220,7 +220,8 @@ class HabitsManager extends ChangeNotifier {
       List<String> questions = const [],
       double meterMin = 0.0,
       double meterMax = 10.0,
-      List<String> meterLabels = const []}) {
+      List<String> meterLabels = const [],
+      bool is24Hour = false}) {
     Habit newHabit = Habit(
       habitData: HabitData(
         position: allHabits.length,
@@ -246,6 +247,7 @@ class HabitsManager extends ChangeNotifier {
         meterMin: meterMin,
         meterMax: meterMax,
         meterLabels: meterLabels,
+        is24Hour: is24Hour,
       ),
     );
     _habitRepository.createHabit(newHabit).then(
@@ -300,6 +302,8 @@ class HabitsManager extends ChangeNotifier {
     hab.habitData.meterMax = habitData.meterMax;
     hab.habitData.meterLabels = habitData.meterLabels;
     hab.habitData.archived = habitData.archived;
+    hab.habitData.is24Hour = habitData.is24Hour;
+    hab.habitData.createdAt = habitData.createdAt;
     _habitRepository.updateHabit(hab);
     if (habitData.notification) {
       _notificationService?.setSmartHabitNotification(
@@ -507,9 +511,38 @@ class HabitsManager extends ChangeNotifier {
         now.month != _lastUpdateDate.month ||
         now.year != _lastUpdateDate.year) {
       _lastUpdateDate = now;
+      _deleteExpired24HourHabits();
       _reloadHabits();
       notifyListeners();
       _updateHomeWidgetAsync();
+    }
+  }
+
+  /// Delete 24-hour habits that are older than 24 hours
+  void _deleteExpired24HourHabits() {
+    final now = DateTime.now();
+    final habitsToDelete = <Habit>[];
+    
+    for (var habit in allHabits) {
+      if (habit.habitData.is24Hour) {
+        final hoursSinceCreation = now.difference(habit.habitData.createdAt).inHours;
+        if (hoursSinceCreation >= 24) {
+          habitsToDelete.add(habit);
+        }
+      }
+    }
+    
+    // Delete expired habits
+    for (var habit in habitsToDelete) {
+      if (habit.habitData.id != null) {
+        _habitRepository.deleteHabit(habit.habitData.id!);
+        _notificationService?.disableHabitNotification(habit.habitData.id!);
+        allHabits.remove(habit);
+      }
+    }
+    
+    if (habitsToDelete.isNotEmpty) {
+      updateOrder();
     }
   }
 

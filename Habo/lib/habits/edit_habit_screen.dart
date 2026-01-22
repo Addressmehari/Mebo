@@ -68,6 +68,11 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
   TextEditingController meterMaxController = TextEditingController(text: '10');
   List<TextEditingController> meterLabelControllers = [];
   List<String> meterLabels = [];
+  
+  // 24-hour task flag
+  bool is24Hour = false;
+  TextEditingController description = TextEditingController();
+
 
   Future<void> setNotificationTime(BuildContext context) async {
     TimeOfDay? selectedTime;
@@ -201,6 +206,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
       meterMinController.text = widget.habitData!.meterMin.toStringAsFixed(0);
       meterMaxController.text = widget.habitData!.meterMax.toStringAsFixed(0);
       meterLabels = List.from(widget.habitData!.meterLabels);
+      is24Hour = widget.habitData!.is24Hour;
     } else {
       // New habit, set defaults
       questions = List.from(defaultQuestions);
@@ -404,6 +410,8 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     meterMin: double.tryParse(meterMinController.text) ?? 0.0,
                     meterMax: double.tryParse(meterMaxController.text) ?? 10.0,
                     meterLabels: meterLabels,
+                    is24Hour: is24Hour,
+                    createdAt: widget.habitData!.createdAt,
                   );
                   final habitsManager =
                       Provider.of<HabitsManager>(context, listen: false);
@@ -438,6 +446,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     meterMin: double.tryParse(meterMinController.text) ?? 0.0,
                     meterMax: double.tryParse(meterMaxController.text) ?? 10.0,
                     meterLabels: meterLabels,
+                    is24Hour: is24Hour,
                   );
                   // For new habits, we need to get the habit ID and then update categories
                   // This will be handled by updating the addHabit method to accept categories
@@ -516,6 +525,54 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                         ],
                       ),
                     ),
+                    
+                    // 24-hour task toggle
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 25),
+                      leading: Icon(
+                        Icons.schedule,
+                        color: is24Hour ? Theme.of(context).colorScheme.primary : null,
+                      ),
+                      title: const Text('24-Hour Task'),
+                      subtitle: is24Hour 
+                          ? const Text(
+                              'This habit will auto-delete after 24 hours',
+                              style: TextStyle(fontSize: 12, color: Colors.orange),
+                            )
+                          : null,
+                      trailing: Switch(
+                        value: is24Hour,
+                        onChanged: (value) {
+                          setState(() {
+                            is24Hour = value;
+                          });
+                        },
+                      ),
+                    ),
+                    if (is24Hour)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: Colors.orange.shade700,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Perfect for daily planning! This task will automatically be deleted 24 hours after creation.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.orange.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    
                     if (habitType == HabitType.diary) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 25),
