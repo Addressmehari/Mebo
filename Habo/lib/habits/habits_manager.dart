@@ -393,13 +393,13 @@ class HabitsManager extends ChangeNotifier {
     return allHabits.where((habit) => habit.habitData.archived).toList();
   }
 
-  void deleteHabit(int id) {
+  void deleteHabit(int id, {bool silent = false}) {
     deletedHabit = findHabitById(id);
     allHabits.remove(deletedHabit);
     toDelete.addLast(deletedHabit!);
     Future.delayed(const Duration(seconds: 4), () => deleteFromDB());
 
-    if (_uiFeedbackService != null) {
+    if (!silent && _uiFeedbackService != null) {
       _uiFeedbackService!.showMessageWithAction(
         message: S.current.habitDeleted,
         actionLabel: S.current.undo,

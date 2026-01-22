@@ -28,9 +28,9 @@ class _StoryDetailModalState extends State<StoryDetailModal> {
     // Close modal immediately
     Navigator.of(context).pop();
     
-    // Delete the habit after a short delay (gives time for the UI to update)
+    // Delete the habit silently (no undo snackbar)
     Future.delayed(const Duration(milliseconds: 500), () {
-      habitsManager.deleteHabit(widget.habit.habitData.id!);
+      habitsManager.deleteHabit(widget.habit.habitData.id!, silent: true);
     });
   }
 
@@ -43,8 +43,8 @@ class _StoryDetailModalState extends State<StoryDetailModal> {
       [DayType.skip, 'Skipped via story'],
     );
     
-    // Delete the 24-hour habit
-    habitsManager.deleteHabit(widget.habit.habitData.id!);
+    // Delete the 24-hour habit silently (no undo snackbar)
+    habitsManager.deleteHabit(widget.habit.habitData.id!, silent: true);
     
     Navigator.of(context).pop();
   }

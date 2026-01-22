@@ -203,6 +203,7 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
               settingsManager.getThemeString == Themes.materialYou;
 
           return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
             title: 'Habo',
             localizationsDelegates: const [
               S.delegate,
