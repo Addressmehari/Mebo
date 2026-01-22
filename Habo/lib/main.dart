@@ -204,7 +204,7 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
 
           return MaterialApp.router(
             debugShowCheckedModeBanner: false,
-            title: 'Habo',
+            title: 'Mebo',
             localizationsDelegates: const [
               S.delegate,
               GlobalMaterialLocalizations.delegate,

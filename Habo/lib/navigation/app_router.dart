@@ -56,8 +56,9 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
         if (appStateManager.getSettings) SettingsScreen.page(),
         if (appStateManager.getWhatsNew || _shouldShowWhatsNew())
           WhatsNewScreen.page(),
-        if (appStateManager.getOnboarding || !settingsManager.getSeenOnboarding)
-          OnboardingScreen.page(),
+        // Onboarding disabled
+        // if (appStateManager.getOnboarding || !settingsManager.getSeenOnboarding)
+        //   OnboardingScreen.page(),
         if (appStateManager.getCreateHabit) EditHabitScreen.page(null),
         if (appStateManager.getEditHabit != null)
           EditHabitScreen.page(appStateManager.getEditHabit!),
@@ -195,11 +196,7 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
   }
 
   bool _shouldShowWhatsNew() {
-    // Only show for users who have completed onboarding.
-    if (!settingsManager.getSeenOnboarding) return false;
-    final current = settingsManager.getCurrentAppVersion;
-    if (current.isEmpty) return false;
-    final last = settingsManager.getLastWhatsNewVersion;
-    return current != last;
+    // Disabled for clean launch
+    return false;
   }
 }

@@ -1,4 +1,4 @@
-package com.pavlenko.Habo
+package com.mebo.tracker
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager

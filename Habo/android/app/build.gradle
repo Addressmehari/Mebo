@@ -29,7 +29,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.pavlenko.Habo"
+    namespace "com.mebo.tracker"
 
     compileSdk flutter.compileSdkVersion
 
@@ -48,7 +48,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.pavlenko.Habo"
+        applicationId "com.mebo.tracker"
         minSdkVersion flutter.minSdkVersion
         compileSdk 36
         targetSdkVersion 36

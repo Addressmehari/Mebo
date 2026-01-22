@@ -10,6 +10,8 @@ import 'package:habo/habits/habits_manager.dart';
 import 'package:habo/settings/settings_manager.dart';
 import 'package:habo/navigation/navigation.dart';
 
+import 'package:google_fonts/google_fonts.dart';
+
 class HabitsScreen extends StatefulWidget {
   static MaterialPage page() {
     return MaterialPage(
@@ -102,9 +104,13 @@ class _HabitsScreenState extends State<HabitsScreen> {
       ) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text(
-              'Habo',
-              style: TextStyle(fontWeight: FontWeight.w700),
+            title: Text(
+              'Mebo',
+              style: GoogleFonts.righteous(
+                fontWeight: FontWeight.w700,
+                fontSize: 26,
+                letterSpacing: 2.0,
+              ),
             ),
             backgroundColor: Colors.transparent,
             actions: <Widget>[

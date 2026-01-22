@@ -1,4 +1,4 @@
-package com.pavlenko.Habo
+package com.mebo.tracker
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
