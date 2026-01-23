@@ -133,6 +133,8 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
 
     if (platformSupportsNotifications()) {
       initializeNotifications();
+      // Set up notification listeners to recreate dismissed 24-hour notifications
+      setup24HourNotificationListeners(habitsManager);
     }
 
     GoogleFonts.config.allowRuntimeFetching = false;

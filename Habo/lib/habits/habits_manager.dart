@@ -15,6 +15,7 @@ import 'package:habo/services/notification_service.dart';
 import 'package:habo/services/ui_feedback_service.dart';
 import 'package:habo/services/home_widget_service.dart';
 import 'package:habo/helpers/widget_update_helper.dart';
+import 'package:habo/notifications.dart' as notifications;
 
 class HabitsManager extends ChangeNotifier {
   final HabitRepository _habitRepository;
@@ -260,7 +261,12 @@ class HabitsManager extends ChangeNotifier {
           updateHabitCategories(id, categories);
         }
 
-        if (notification) {
+        // Handle notifications based on habit type
+        if (is24Hour) {
+          // Create/update the aggregated 24-hour notification
+          notifications.createAggregated24HourNotification(this);
+        } else if (notification) {
+          // Regular habit notification
           _notificationService?.setSmartHabitNotification(
             id: id,
             time: notTime,
@@ -276,6 +282,7 @@ class HabitsManager extends ChangeNotifier {
     );
     updateOrder();
   }
+
 
   void editHabit(HabitData habitData) {
     Habit? hab = findHabitById(habitData.id!);
@@ -431,10 +438,23 @@ class HabitsManager extends ChangeNotifier {
 
   Future<void> deleteFromDB() async {
     if (toDelete.isNotEmpty) {
-      _notificationService
-          ?.disableHabitNotification(toDelete.first.habitData.id!);
-      await _habitRepository.deleteHabit(toDelete.first.habitData.id!);
+      final habitToDelete = toDelete.first;
+      final was24Hour = habitToDelete.habitData.is24Hour;
+      
+      // Remove appropriate notification based on habit type
+      if (was24Hour) {
+        // Don't remove individual notification, just update the aggregate after deletion
+      } else {
+        _notificationService?.disableHabitNotification(habitToDelete.habitData.id!);
+      }
+      
+      await _habitRepository.deleteHabit(habitToDelete.habitData.id!);
       toDelete.removeFirst();
+      
+      // Update aggregated notification if it was a 24-hour task
+      if (was24Hour) {
+        notifications.createAggregated24HourNotification(this);
+      }
     }
     if (toDelete.isNotEmpty) {
       Future.delayed(const Duration(seconds: 1), () => deleteFromDB());
@@ -532,11 +552,11 @@ class HabitsManager extends ChangeNotifier {
       }
     }
     
-    // Delete expired habits
+    // Delete expired habits and their notifications
     for (var habit in habitsToDelete) {
       if (habit.habitData.id != null) {
         _habitRepository.deleteHabit(habit.habitData.id!);
-        _notificationService?.disableHabitNotification(habit.habitData.id!);
+        _notificationService?.remove24HourTaskNotification(habit.habitData.id!);
         allHabits.remove(habit);
       }
     }
