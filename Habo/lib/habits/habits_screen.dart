@@ -104,12 +104,20 @@ class _HabitsScreenState extends State<HabitsScreen> {
       ) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(
-              'Mebo',
-              style: GoogleFonts.righteous(
-                fontWeight: FontWeight.w700,
-                fontSize: 26,
-                letterSpacing: 2.0,
+            title: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [HaboColors.primary, HaboColors.progress],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(bounds),
+              child: Text(
+                'Mebo',
+                style: GoogleFonts.righteous(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 28,
+                  letterSpacing: 2.0,
+                  color: Colors.white,
+                ),
               ),
             ),
             backgroundColor: Colors.transparent,
@@ -119,7 +127,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                   Icons.location_on,
                   semanticLabel: 'Location',
                 ),
-                color: Colors.grey[400],
+                color: Colors.amber,
                 tooltip: 'Location',
                 onPressed: () {
                   Provider.of<HabitsManager>(context, listen: false)
