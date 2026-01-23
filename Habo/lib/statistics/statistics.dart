@@ -15,6 +15,12 @@ class StatisticsData {
   int savings = 0; // Add savings as separate category
   double totalValue = 0; // Track amount saved
   SplayTreeMap<int, Map<DayType, List<int>>> monthlyCheck = SplayTreeMap();
+  
+  // New fields for enhanced visualization
+  HabitType habitType = HabitType.boolean;
+  String unit = '';
+  double targetValue = 0;
+  Map<DateTime, double> valueHistory = {};
 }
 
 class OverallStatisticsData {
@@ -38,9 +44,12 @@ class Statistics {
 
     if (habits == null) return stats;
 
-    for (var habit in habits) {
+  for (var habit in habits) {
       var stat = StatisticsData();
       stat.title = habit.habitData.title;
+      stat.habitType = habit.habitData.habitType;
+      stat.unit = habit.habitData.unit;
+      stat.targetValue = habit.habitData.targetValue;
 
       bool usingTwoDayRule = false;
 
@@ -67,6 +76,8 @@ class Statistics {
                 stat.progress++;
                 if (habit.habitData.isNumeric && value.length > 2) {
                   final progressValue = (value[2] as num?)?.toDouble() ?? 0.0;
+                  stat.valueHistory[key] = progressValue;
+                  
                   if (progressValue >= habit.habitData.targetValue) {
                     // 100% or more = maintain streak
                     stat.actualStreak++;
@@ -103,6 +114,9 @@ class Statistics {
                 break;
               case DayType.meter:
                 stat.meter++;
+                 if (value.length > 2) {
+                   stat.valueHistory[key] = (value[2] as num?)?.toDouble() ?? 0.0;
+                 }
                 // Meter entries always maintain streak
                 stat.actualStreak++;
                 if (stat.actualStreak > stat.topStreak) {
@@ -113,7 +127,9 @@ class Statistics {
               case DayType.savings:
                 stat.savings++;
                 if (value.length > 2) {
-                  stat.totalValue += (value[2] as num?)?.toDouble() ?? 0.0;
+                  double val = (value[2] as num?)?.toDouble() ?? 0.0;
+                  stat.totalValue += val;
+                  stat.valueHistory[key] = val;
                 }
                 // Savings maintain streak
                 stat.actualStreak++;

@@ -54,6 +54,7 @@ class Habit extends StatefulWidget {
       'is24Hour': habitData.is24Hour ? 1 : 0,
       'createdAt': habitData.createdAt.toIso8601String(),
       'color': habitData.color,
+      'reminders': jsonEncode(habitData.reminders.map((e) => '${e.hour}:${e.minute}').toList()),
     };
   }
 
@@ -94,6 +95,7 @@ class Habit extends StatefulWidget {
       'is24Hour': habitData.is24Hour ? 1 : 0,
       'createdAt': habitData.createdAt.toIso8601String(),
       'color': habitData.color,
+      'reminders': habitData.reminders.map((e) => '${e.hour}:${e.minute}').toList(),
     };
   }
 
@@ -137,6 +139,11 @@ class Habit extends StatefulWidget {
               ? DateTime.parse(json['createdAt'])
               : DateTime.now(),
           color: json['color'] ?? 0,
+          reminders: json['reminders'] != null
+              ? (json['reminders'] is List) 
+                 ? (json['reminders'] as List).map((e) => parseTimeOfDay(e)).toList()
+                 : (jsonDecode(json['reminders']) as List).map((e) => parseTimeOfDay(e)).toList()
+              : [],
         );
 
   static SplayTreeMap<DateTime, List> doEvents(Map<String, dynamic> input) {

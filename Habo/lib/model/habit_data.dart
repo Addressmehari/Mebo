@@ -35,8 +35,17 @@ class HabitData {
     this.is24Hour = false,
     this.description = '',
     this.color = 0,
+    this.reminders = const [],
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
+
+  // Backwards compatibility for single notification time
+  // If reminders list is empty, use notTime if notification is enabled
+  List<TimeOfDay> get allReminders {
+    if (reminders.isNotEmpty) return reminders;
+    if (notification) return [notTime];
+    return [];
+  }
 
   SplayTreeMap<DateTime, List> events;
   int streak = 0;
@@ -79,6 +88,9 @@ class HabitData {
   bool is24Hour;
   DateTime createdAt;
   String description; // Description for 24-hour tasks
+
+  // List of notification times
+  List<TimeOfDay> reminders;
 
   // Custom color for the habit (0 = default theme color)
   int color;

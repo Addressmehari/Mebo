@@ -15,7 +15,7 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
 
 class HaboModel {
-  static const _dbVersion = 12;
+  static const _dbVersion = 13;
   Database? _db;
 
   Database get db {
@@ -164,6 +164,9 @@ class HaboModel {
                   ? DateTime.parse(hab['createdAt'])
                   : DateTime.now(),
               color: hab['color'] ?? 0,
+              reminders: (hab['reminders'] != null && hab['reminders'].toString().isNotEmpty)
+                  ? (jsonDecode(hab['reminders']) as List).map((e) => parseTimeOfDay(e)).toList()
+                  : [],
             ),
           ),
         );
@@ -323,7 +326,7 @@ class HaboModel {
     }
   }
 
-  void _createTableHabitsV12(Batch batch) {
+  void _createTableHabitsV13(Batch batch) {
     batch.execute('DROP TABLE IF EXISTS habits');
     batch.execute('''CREATE TABLE habits (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -351,8 +354,23 @@ class HaboModel {
     meterLabels TEXT DEFAULT '',
     is24Hour INTEGER DEFAULT 0,
     createdAt TEXT DEFAULT '',
-    color INTEGER DEFAULT 0
+    color INTEGER DEFAULT 0,
+    reminders TEXT DEFAULT ''
     )''');
+  }
+
+  Future<void> _updateTableHabitsAddReminders(Database db) async {
+    try {
+      final result = await db.rawQuery("PRAGMA table_info(habits)");
+      final hasColumn = result.any((column) => column['name'] == 'reminders');
+      if (!hasColumn) {
+        await db.execute("ALTER TABLE habits ADD COLUMN reminders TEXT DEFAULT ''");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error adding reminders column: $e');
+      }
+    }
   }
 
   Future<void> _updateTableHabitsAdd24HourFields(Database db) async {
@@ -464,7 +482,7 @@ class HaboModel {
 
   void _onCreate(Database db, int version) {
     var batch = db.batch();
-    _createTableHabitsV12(batch);
+    _createTableHabitsV13(batch);
     _createTableEventsV4(batch);
     _createTableCategoriesV7(batch); // Use V7 with fontFamily column
     _createTableHabitCategoriesV5(batch);
@@ -532,6 +550,11 @@ class HaboModel {
     // Handle color column addition
     if (oldVersion < 12) {
       await _updateTableHabitsAddColor(db);
+    }
+    
+    // Handle multiple reminders
+    if (oldVersion < 13) {
+      await _updateTableHabitsAddReminders(db);
     }
   }
 

@@ -222,7 +222,8 @@ class HabitsManager extends ChangeNotifier {
       double meterMax = 10.0,
       List<String> meterLabels = const [],
       bool is24Hour = false,
-      int color = 0}) {
+      int color = 0,
+      List<TimeOfDay> reminders = const []}) {
     Habit newHabit = Habit(
       habitData: HabitData(
         position: allHabits.length,
@@ -250,6 +251,7 @@ class HabitsManager extends ChangeNotifier {
         meterLabels: meterLabels,
         is24Hour: is24Hour,
         color: color,
+        reminders: reminders,
       ),
     );
     _habitRepository.createHabit(newHabit).then(
@@ -262,14 +264,14 @@ class HabitsManager extends ChangeNotifier {
           updateHabitCategories(id, categories);
         }
 
-        if (notification) {
-          _notificationService?.setSmartHabitNotification(
-            id: id,
-            time: notTime,
-            habitTitle: title,
-            habitType: habitType,
-          );
-        } else {
+          if (notification) {
+            _notificationService?.setSmartHabitNotification(
+              id: id,
+              times: reminders.isNotEmpty ? reminders : [notTime],
+              habitTitle: title,
+              habitType: habitType,
+            );
+          } else {
           _notificationService?.disableHabitNotification(id);
         }
         notifyListeners();
@@ -311,7 +313,7 @@ class HabitsManager extends ChangeNotifier {
     if (habitData.notification) {
       _notificationService?.setSmartHabitNotification(
         id: habitData.id!,
-        time: habitData.notTime,
+        times: habitData.allReminders,
         habitTitle: habitData.title,
         habitType: habitData.habitType,
         currentStreak: hab.habitData.streak,
@@ -373,7 +375,7 @@ class HabitsManager extends ChangeNotifier {
     if (habit.habitData.notification) {
       _notificationService?.setSmartHabitNotification(
         id: id,
-        time: habit.habitData.notTime,
+        times: habit.habitData.allReminders,
         habitTitle: habit.habitData.title,
         habitType: habit.habitData.habitType,
         currentStreak: habit.habitData.streak,

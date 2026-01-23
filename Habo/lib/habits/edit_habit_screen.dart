@@ -53,6 +53,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
   List<TextEditingController> questionControllers = [];
   List<Category> selectedCategories = [];
   List<String> questions = [];
+  List<TimeOfDay> reminders = [];
   
   final List<String> defaultQuestions = [
     "What am I grateful for today?",
@@ -74,6 +75,46 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
   int selectedColor = 0;
   TextEditingController description = TextEditingController();
 
+
+  Future<void> _addReminder() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        reminders.add(picked);
+        // Keep main notTime synced with first reminder for backward compatibility
+        if (reminders.isNotEmpty) {
+          notTime = reminders.first;
+        }
+      });
+    }
+  }
+
+  Future<void> _editReminder(int index) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: reminders[index],
+    );
+    if (picked != null) {
+      setState(() {
+        reminders[index] = picked;
+        if (index == 0) {
+          notTime = picked;
+        }
+      });
+    }
+  }
+
+  void _removeReminder(int index) {
+    setState(() {
+      reminders.removeAt(index);
+      if (reminders.isNotEmpty) {
+        notTime = reminders.first;
+      }
+    });
+  }
 
   Future<void> setNotificationTime(BuildContext context) async {
     TimeOfDay? selectedTime;
@@ -209,9 +250,15 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
       meterLabels = List.from(widget.habitData!.meterLabels);
       is24Hour = widget.habitData!.is24Hour;
       selectedColor = widget.habitData!.color;
+      reminders = List.from(widget.habitData!.reminders);
+      // Fallback for existing habits with single notification
+      if (reminders.isEmpty && notification) {
+        reminders.add(notTime);
+      }
     } else {
       // New habit, set defaults
       questions = List.from(defaultQuestions);
+      reminders = [const TimeOfDay(hour: 9, minute: 0)];
     }
     
     // Initialize controllers for each question
@@ -331,33 +378,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
           backgroundColor: Colors.transparent,
           iconTheme: Theme.of(context).iconTheme,
           actions: <Widget>[
-            if (widget.habitData != null)
-              IconButton(
-                icon: Icon(
-                  widget.habitData!.archived ? Icons.unarchive : Icons.archive,
-                  semanticLabel: widget.habitData!.archived
-                      ? S.of(context).unarchive
-                      : S.of(context).archive,
-                ),
-                color: Colors.orange,
-                tooltip: widget.habitData!.archived
-                    ? S.of(context).unarchiveHabit
-                    : S.of(context).archiveHabit,
-                onPressed: () {
-                  final appStateManager =
-                      Provider.of<AppStateManager>(context, listen: false);
-                  if (widget.habitData != null) {
-                    final habitsManager =
-                        Provider.of<HabitsManager>(context, listen: false);
-                    if (widget.habitData!.archived) {
-                      habitsManager.unarchiveHabit(widget.habitData!.id!);
-                    } else {
-                      habitsManager.archiveHabit(widget.habitData!.id!);
-                    }
-                    appStateManager.goEditHabit(null);
-                  }
-                },
-              ),
+
             if (widget.habitData != null)
               IconButton(
                 icon: Icon(
@@ -415,6 +436,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     is24Hour: is24Hour,
                     createdAt: widget.habitData!.createdAt,
                     color: selectedColor,
+                    reminders: reminders,
                   );
                   final habitsManager =
                       Provider.of<HabitsManager>(context, listen: false);
@@ -451,6 +473,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     meterLabels: meterLabels,
                     is24Hour: is24Hour,
                     color: selectedColor,
+                    reminders: reminders,
                   );
                   // For new habits, we need to get the habit ID and then update categories
                   // This will be handled by updating the addHabit method to accept categories
@@ -509,10 +532,6 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                           DropdownMenuItem(
                             value: HabitType.boolean,
                             child: Text(S.of(context).booleanHabit),
-                          ),
-                          DropdownMenuItem(
-                            value: HabitType.numeric,
-                            child: Text(S.of(context).numericHabit),
                           ),
                           DropdownMenuItem(
                              value: HabitType.diary,
@@ -1153,215 +1172,69 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                         );
                       },
                     ),
-                    ExpansionTile(
-                      shape: const Border(),
-                      title: Padding(
-                        padding: const EdgeInsets.all(7.0),
-                        child: Text(
-                          S.of(context).advancedHabitBuilding,
-                          style: const TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    if (platformSupportsNotifications())
+                      ListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 25),
+                        title: Text(
+                          S.of(context).notifications,
+                        ),
+                        trailing: Switch(
+                          value: notification,
+                          onChanged: (value) {
+                            notification = value;
+                            setState(() {});
+                          },
                         ),
                       ),
-                      initiallyExpanded: advanced,
-                      onExpansionChanged: (bool value) {
-                        advanced = value;
-                      },
-                      children: <Widget>[
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Center(
-                            child: RichText(
-                              text: TextSpan(
-                                style: DefaultTextStyle.of(context).style,
-                                children: [
-                                  TextSpan(
-                                      text: S
-                                          .of(context)
-                                          .advancedHabitBuildingDescription),
-                                  WidgetSpan(
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          10, 0, 0, 0),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          showAdvancedTooltip(context);
-                                        },
-                                        child: const Icon(
-                                          Icons.info,
-                                          color: Colors.grey,
-                                          size: 20,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                    if (platformSupportsNotifications())
+                      ListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 25),
+                        enabled: notification,
+                        title: Text(
+                          S.of(context).notificationTime,
                         ),
-                        const SizedBox(
-                          height: 20,
+                        trailing: IconButton(
+                          icon: const Icon(Icons.add_alarm),
+                          onPressed: notification ? _addReminder : null,
                         ),
-                        TextContainer(
-                          title: cue,
-                          hint: S.of(context).at7AM,
-                          label: S.of(context).cue,
-                        ),
-                        if (platformSupportsNotifications())
-                          ListTile(
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 25),
-                            title: Text(
-                              S.of(context).notifications,
-                            ),
-                            trailing: Switch(
-                              value: notification,
-                              onChanged: (value) {
-                                notification = value;
-                                setState(() {});
-                              },
-                            ),
-                          ),
-                        if (platformSupportsNotifications())
-                          ListTile(
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 25),
-                            enabled: notification,
-                            title: Text(
-                              S.of(context).notificationTime,
-                            ),
-                            trailing: InkWell(
-                              onTap: () {
-                                if (notification) {
-                                  setNotificationTime(context);
-                                }
-                              },
-                              child: Text(
-                                '${notTime.hour.toString().padLeft(2, '0')}:${notTime.minute.toString().padLeft(2, '0')}',
-                                style: TextStyle(
-                                    color: (notification)
-                                        ? null
-                                        : Theme.of(context).disabledColor),
-                              ),
-                            ),
-                          ),
-                        TextContainer(
-                          title: routine,
-                          hint: S.of(context).do50PushUps,
-                          label: S.of(context).routine,
-                        ),
-                        TextContainer(
-                          title: reward,
-                          hint: S.of(context).fifteenMinOfVideoGames,
-                          label: S.of(context).reward,
-                        ),
-                        Container(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 5, horizontal: 20),
-                          child: Row(
-                            children: <Widget>[
-                              Checkbox(
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    showReward = value!;
-                                  });
-                                },
-                                value: showReward,
-                              ),
-                              Text(
-                                S.of(context).showReward,
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  showSmallTooltip(
-                                    context,
-                                    S.of(context).showReward,
-                                    S.of(context).remainderOfReward,
-                                  );
-                                },
-                                icon: const Icon(
-                                  Icons.info,
-                                  color: Colors.grey,
-                                  size: 20,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        ListTile(
+                      ),
+                    
+                    if (platformSupportsNotifications() && notification)
+                      ...reminders.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final time = entry.value;
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 40),
+                          dense: true,
                           title: Text(
-                            S.of(context).habitContract,
-                            style: const TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.bold,
+                            '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Center(
-                            child: Text(
-                              S.of(context).habitContractDescription,
-                              textAlign: TextAlign.left,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        TextContainer(
-                          title: sanction,
-                          hint: S.of(context).donateToCharity,
-                          label: S.of(context).sanction,
-                        ),
-                        Container(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 5, horizontal: 20),
-                          child: Row(
-                            children: <Widget>[
-                              Checkbox(
-                                onChanged: (bool? value) {
-                                  setState(
-                                    () {
-                                      showSanction = value!;
-                                    },
-                                  );
-                                },
-                                value: showSanction,
-                              ),
-                              Text(
-                                S.of(context).showSanction,
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, size: 20),
+                                onPressed: () => _editReminder(index),
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                               IconButton(
-                                onPressed: () {
-                                  showSmallTooltip(
-                                    context,
-                                    S.of(context).showSanction,
-                                    S.of(context).remainderOfSanction,
-                                  );
-                                },
-                                icon: const Icon(
-                                  Icons.info,
-                                  color: Colors.grey,
-                                  size: 20,
-                                ),
+                                icon: const Icon(Icons.remove_circle_outline, size: 20),
+                                onPressed: () => _removeReminder(index),
+                                color: HaboColors.red,
                               ),
                             ],
                           ),
-                        ),
-                        TextContainer(
-                          title: accountant,
-                          hint: S.of(context).dan,
-                          label: S.of(context).accountabilityPartner,
-                        ),
-                        const SizedBox(
-                          height: 110,
-                        ),
-                      ],
-                    )
+                        );
+                      }),
+                    const SizedBox(
+                      height: 110,
+                    ),
                   ],
                 ),
               ),

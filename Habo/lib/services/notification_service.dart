@@ -49,7 +49,7 @@ class NotificationService {
           if (!isCompletedToday && !existingIds.contains(data.id)) {
             setSmartHabitNotification(
               id: data.id!,
-              time: data.notTime,
+              times: data.allReminders,
               habitTitle: data.title,
               habitType: data.habitType,
               currentStreak: data.streak,
@@ -76,24 +76,39 @@ class NotificationService {
   /// Sets a smart notification with personalized motivational messages
   void setSmartHabitNotification({
     required int id,
-    required TimeOfDay time,
+    required List<TimeOfDay> times,
     required String habitTitle,
     required HabitType habitType,
     int? currentStreak,
   }) {
-    notifications.setSmartHabitNotification(
-      id: id,
-      timeOfDay: time,
-      habitTitle: habitTitle,
-      habitType: habitType,
-      currentStreak: currentStreak,
-    );
+    // Cancel existing notifications for this habit first to ensure clean state
+    disableHabitNotification(id);
+
+    for (int i = 0; i < times.length; i++) {
+       // Primary ID is the habit ID itself (backward compatibility)
+       // Secondary IDs are derived: id + (index * 100000)
+       // Assuming habit IDs won't conflict with this range easily
+       final notificationId = (i == 0) ? id : (id + (i * 100000));
+       
+       notifications.setSmartHabitNotification(
+        id: notificationId,
+        timeOfDay: times[i],
+        habitTitle: habitTitle,
+        habitType: habitType,
+        currentStreak: currentStreak,
+      );
+    }
   }
 
-  /// Disables notification for a specific habit
+  /// Disables notification for a specific habit (and all its sub-notifications)
   void disableHabitNotification(int id) {
-    // Delegate to global notification function
+    // Cancel primary notification
     notifications.disableHabitNotification(id);
+    
+    // Cancel potential secondary notifications (up to 10)
+    for (int i = 1; i <= 10; i++) {
+      notifications.disableHabitNotification(id + (i * 100000));
+    }
   }
 
   /// Handles notification rescheduling when a habit event is added

@@ -128,33 +128,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
                       .goLocation(true);
                 },
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.archive,
-                  semanticLabel: S.of(context).archivedHabits,
-                ),
-                color: Colors.grey[400],
-                tooltip: S.of(context).viewArchivedHabits,
-                onPressed: () {
-                  Provider.of<HabitsManager>(context, listen: false)
-                      .hideSnackBar();
-                  _showArchivedHabitsDialog(context);
-                },
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.bar_chart,
-                  semanticLabel: S.of(context).statistics,
-                ),
-                color: Colors.grey[400],
-                tooltip: S.of(context).statistics,
-                onPressed: () {
-                  Provider.of<HabitsManager>(context, listen: false)
-                      .hideSnackBar();
-                  Provider.of<AppStateManager>(context, listen: false)
-                      .goStatistics(true);
-                },
-              ),
+
+
               IconButton(
                 icon: Icon(
                   Icons.settings,

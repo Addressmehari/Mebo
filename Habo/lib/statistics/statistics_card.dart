@@ -4,6 +4,8 @@ import 'package:habo/settings/settings_manager.dart';
 import 'package:habo/statistics/monthly_graph.dart';
 import 'package:habo/statistics/statistics.dart';
 import 'package:provider/provider.dart';
+import 'package:habo/constants.dart';
+import 'package:habo/statistics/trend_line_chart.dart';
 
 class StatisticsCard extends StatelessWidget {
   const StatisticsCard({
@@ -235,7 +237,12 @@ class StatisticsCard extends StatelessWidget {
             const SizedBox(
               height: 16,
             ),
-            MonthlyGraph(data: data),
+            if (data.habitType == HabitType.numeric ||
+                data.habitType == HabitType.meter ||
+                data.habitType == HabitType.savings)
+              TrendLineChart(data: data)
+            else
+              MonthlyGraph(data: data),
           ],
         ),
       ),
