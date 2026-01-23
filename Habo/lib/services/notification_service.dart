@@ -123,37 +123,4 @@ class NotificationService {
       notifications.rescheduleNotificationForToday(habitId);
     }
   }
-
-  /// Creates a persistent notification for a 24-hour task
-  Future<void> create24HourTaskNotification({
-    required int habitId,
-    required String taskTitle,
-    String? description,
-  }) async {
-    await notifications.create24HourTaskNotification(
-      habitId: habitId,
-      taskTitle: taskTitle,
-      description: description,
-    );
-  }
-
-  /// Updates an existing 24-hour task notification with remaining time
-  Future<void> update24HourTaskNotification({
-    required int habitId,
-    required String taskTitle,
-    required DateTime createdAt,
-    String? description,
-  }) async {
-    await notifications.update24HourTaskNotification(
-      habitId: habitId,
-      taskTitle: taskTitle,
-      createdAt: createdAt,
-      description: description,
-    );
-  }
-
-  /// Removes a 24-hour task notification
-  Future<void> remove24HourTaskNotification(int habitId) async {
-    await notifications.remove24HourTaskNotification(habitId);
-  }
 }

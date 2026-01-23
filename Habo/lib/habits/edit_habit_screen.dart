@@ -71,6 +71,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
   
   // 24-hour task flag
   bool is24Hour = false;
+  int selectedColor = 0;
   TextEditingController description = TextEditingController();
 
 
@@ -207,6 +208,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
       meterMaxController.text = widget.habitData!.meterMax.toStringAsFixed(0);
       meterLabels = List.from(widget.habitData!.meterLabels);
       is24Hour = widget.habitData!.is24Hour;
+      selectedColor = widget.habitData!.color;
     } else {
       // New habit, set defaults
       questions = List.from(defaultQuestions);
@@ -412,6 +414,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     meterLabels: meterLabels,
                     is24Hour: is24Hour,
                     createdAt: widget.habitData!.createdAt,
+                    color: selectedColor,
                   );
                   final habitsManager =
                       Provider.of<HabitsManager>(context, listen: false);
@@ -447,6 +450,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     meterMax: double.tryParse(meterMaxController.text) ?? 10.0,
                     meterLabels: meterLabels,
                     is24Hour: is24Hour,
+                    color: selectedColor,
                   );
                   // For new habits, we need to get the habit ID and then update categories
                   // This will be handled by updating the addHabit method to accept categories
@@ -573,6 +577,73 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                         ),
                       ),
                     
+                    // Color Palette Selector
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Accent Color',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: List.generate(HaboColors.habitPalette.length, (index) {
+                                final color = HaboColors.habitPalette[index];
+                                final isSelected = selectedColor == index;
+                                return GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      selectedColor = index;
+                                    });
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.only(right: 12),
+                                    width: 42,
+                                    height: 42,
+                                    decoration: BoxDecoration(
+                                      color: index == 0 ? Theme.of(context).colorScheme.primary : color,
+                                      shape: BoxShape.circle,
+                                      border: isSelected
+                                          ? Border.all(
+                                              color: Theme.of(context).colorScheme.onSurface,
+                                              width: 2.5)
+                                          : Border.all(color: Colors.grey.withValues(alpha: 0.3), width: 1),
+                                      boxShadow: [
+                                        if (isSelected)
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.1),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          )
+                                      ],
+                                    ),
+                                    child: index == 0
+                                        ? const Center(
+                                            child: Icon(Icons.colorize, color: Colors.white, size: 20),
+                                          )
+                                        : (isSelected
+                                            ? const Center(
+                                                child: Icon(Icons.check, color: Colors.black54, size: 24),
+                                              )
+                                            : null),
+                                  ),
+                                );
+                              }),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+
                     if (habitType == HabitType.diary) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 25),

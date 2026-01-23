@@ -53,6 +53,7 @@ class Habit extends StatefulWidget {
       'archived': habitData.archived ? 1 : 0,
       'is24Hour': habitData.is24Hour ? 1 : 0,
       'createdAt': habitData.createdAt.toIso8601String(),
+      'color': habitData.color,
     };
   }
 
@@ -92,6 +93,7 @@ class Habit extends StatefulWidget {
       'archived': habitData.archived ? 1 : 0,
       'is24Hour': habitData.is24Hour ? 1 : 0,
       'createdAt': habitData.createdAt.toIso8601String(),
+      'color': habitData.color,
     };
   }
 
@@ -134,6 +136,7 @@ class Habit extends StatefulWidget {
           createdAt: json['createdAt'] != null
               ? DateTime.parse(json['createdAt'])
               : DateTime.now(),
+          color: json['color'] ?? 0,
         );
 
   static SplayTreeMap<DateTime, List> doEvents(Map<String, dynamic> input) {
@@ -437,7 +440,8 @@ class HabitState extends State<Habit> {
 
     switch (eventType) {
       case DayType.check:
-        return Provider.of<SettingsManager>(context, listen: false).checkColor;
+        final defaultColor = Provider.of<SettingsManager>(context, listen: false).checkColor;
+        return HaboColors.getHabitColor(widget.habitData.color, defaultColor);
       case DayType.fail:
         return Provider.of<SettingsManager>(context, listen: false).failColor;
       case DayType.skip:
@@ -448,8 +452,8 @@ class HabitState extends State<Habit> {
           final progressValue = (events[2] as num?)?.toDouble() ?? 0.0;
           if (progressValue >= widget.habitData.targetValue) {
             // 100% or more = green check color
-            return Provider.of<SettingsManager>(context, listen: false)
-                .checkColor;
+            final defaultColor = Provider.of<SettingsManager>(context, listen: false).checkColor;
+            return HaboColors.getHabitColor(widget.habitData.color, defaultColor);
           }
         }
         return Provider.of<SettingsManager>(context, listen: false)
@@ -457,7 +461,8 @@ class HabitState extends State<Habit> {
       case DayType.clear:
         return Colors.transparent;
       case DayType.meter:
-        return Provider.of<SettingsManager>(context, listen: false).checkColor;
+        final defaultColor = Provider.of<SettingsManager>(context, listen: false).checkColor;
+        return HaboColors.getHabitColor(widget.habitData.color, defaultColor);
       case DayType.savings:
         return Colors.amber;
     }
@@ -585,9 +590,7 @@ class HabitState extends State<Habit> {
         color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(10.0),
         border: Border.all(
-          color: Provider.of<SettingsManager>(context, listen: false)
-              .checkColor
-              .withValues(alpha: 0.3),
+          color: _getEventColor(events).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -603,8 +606,7 @@ class HabitState extends State<Habit> {
                 widthFactor: 1.0,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Provider.of<SettingsManager>(context, listen: false)
-                        .checkColor,
+                    color: _getEventColor(events),
                   ),
                 ),
               ),
@@ -758,9 +760,7 @@ class HabitState extends State<Habit> {
         color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(10.0),
         border: Border.all(
-          color: Provider.of<SettingsManager>(context, listen: false)
-              .checkColor
-              .withValues(alpha: 0.3),
+          color: _getEventColor(events).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -776,8 +776,7 @@ class HabitState extends State<Habit> {
                 widthFactor: 1.0,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Provider.of<SettingsManager>(context, listen: false)
-                        .checkColor,
+                    color: _getEventColor(events),
                   ),
                 ),
               ),

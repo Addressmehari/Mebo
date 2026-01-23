@@ -15,7 +15,6 @@ import 'package:habo/services/notification_service.dart';
 import 'package:habo/services/ui_feedback_service.dart';
 import 'package:habo/services/home_widget_service.dart';
 import 'package:habo/helpers/widget_update_helper.dart';
-import 'package:habo/notifications.dart' as notifications;
 
 class HabitsManager extends ChangeNotifier {
   final HabitRepository _habitRepository;
@@ -222,7 +221,8 @@ class HabitsManager extends ChangeNotifier {
       double meterMin = 0.0,
       double meterMax = 10.0,
       List<String> meterLabels = const [],
-      bool is24Hour = false}) {
+      bool is24Hour = false,
+      int color = 0}) {
     Habit newHabit = Habit(
       habitData: HabitData(
         position: allHabits.length,
@@ -249,6 +249,7 @@ class HabitsManager extends ChangeNotifier {
         meterMax: meterMax,
         meterLabels: meterLabels,
         is24Hour: is24Hour,
+        color: color,
       ),
     );
     _habitRepository.createHabit(newHabit).then(
@@ -261,12 +262,7 @@ class HabitsManager extends ChangeNotifier {
           updateHabitCategories(id, categories);
         }
 
-        // Handle notifications based on habit type
-        if (is24Hour) {
-          // Create/update the aggregated 24-hour notification
-          notifications.createAggregated24HourNotification(this);
-        } else if (notification) {
-          // Regular habit notification
+        if (notification) {
           _notificationService?.setSmartHabitNotification(
             id: id,
             time: notTime,
@@ -282,7 +278,6 @@ class HabitsManager extends ChangeNotifier {
     );
     updateOrder();
   }
-
 
   void editHabit(HabitData habitData) {
     Habit? hab = findHabitById(habitData.id!);
@@ -311,6 +306,7 @@ class HabitsManager extends ChangeNotifier {
     hab.habitData.archived = habitData.archived;
     hab.habitData.is24Hour = habitData.is24Hour;
     hab.habitData.createdAt = habitData.createdAt;
+    hab.habitData.color = habitData.color;
     _habitRepository.updateHabit(hab);
     if (habitData.notification) {
       _notificationService?.setSmartHabitNotification(
@@ -438,23 +434,10 @@ class HabitsManager extends ChangeNotifier {
 
   Future<void> deleteFromDB() async {
     if (toDelete.isNotEmpty) {
-      final habitToDelete = toDelete.first;
-      final was24Hour = habitToDelete.habitData.is24Hour;
-      
-      // Remove appropriate notification based on habit type
-      if (was24Hour) {
-        // Don't remove individual notification, just update the aggregate after deletion
-      } else {
-        _notificationService?.disableHabitNotification(habitToDelete.habitData.id!);
-      }
-      
-      await _habitRepository.deleteHabit(habitToDelete.habitData.id!);
+      _notificationService
+          ?.disableHabitNotification(toDelete.first.habitData.id!);
+      await _habitRepository.deleteHabit(toDelete.first.habitData.id!);
       toDelete.removeFirst();
-      
-      // Update aggregated notification if it was a 24-hour task
-      if (was24Hour) {
-        notifications.createAggregated24HourNotification(this);
-      }
     }
     if (toDelete.isNotEmpty) {
       Future.delayed(const Duration(seconds: 1), () => deleteFromDB());
@@ -552,11 +535,11 @@ class HabitsManager extends ChangeNotifier {
       }
     }
     
-    // Delete expired habits and their notifications
+    // Delete expired habits
     for (var habit in habitsToDelete) {
       if (habit.habitData.id != null) {
         _habitRepository.deleteHabit(habit.habitData.id!);
-        _notificationService?.remove24HourTaskNotification(habit.habitData.id!);
+        _notificationService?.disableHabitNotification(habit.habitData.id!);
         allHabits.remove(habit);
       }
     }

@@ -15,7 +15,7 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
 
 class HaboModel {
-  static const _dbVersion = 11;
+  static const _dbVersion = 12;
   Database? _db;
 
   Database get db {
@@ -163,6 +163,7 @@ class HaboModel {
               createdAt: hab['createdAt'] != null && hab['createdAt'].toString().isNotEmpty
                   ? DateTime.parse(hab['createdAt'])
                   : DateTime.now(),
+              color: hab['color'] ?? 0,
             ),
           ),
         );
@@ -322,7 +323,7 @@ class HaboModel {
     }
   }
 
-  void _createTableHabitsV11(Batch batch) {
+  void _createTableHabitsV12(Batch batch) {
     batch.execute('DROP TABLE IF EXISTS habits');
     batch.execute('''CREATE TABLE habits (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -349,7 +350,8 @@ class HaboModel {
     meterMax REAL DEFAULT 10.0,
     meterLabels TEXT DEFAULT '',
     is24Hour INTEGER DEFAULT 0,
-    createdAt TEXT DEFAULT ''
+    createdAt TEXT DEFAULT '',
+    color INTEGER DEFAULT 0
     )''');
   }
 
@@ -370,6 +372,21 @@ class HaboModel {
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Error adding 24-hour columns: $e');
+      }
+    }
+  }
+
+  Future<void> _updateTableHabitsAddColor(Database db) async {
+    try {
+      final result = await db.rawQuery("PRAGMA table_info(habits)");
+      final hasColor = result.any((column) => column['name'] == 'color');
+      
+      if (!hasColor) {
+        await db.execute("ALTER TABLE habits ADD COLUMN color INTEGER DEFAULT 0");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error adding color column: $e');
       }
     }
   }
@@ -447,7 +464,7 @@ class HaboModel {
 
   void _onCreate(Database db, int version) {
     var batch = db.batch();
-    _createTableHabitsV11(batch);
+    _createTableHabitsV12(batch);
     _createTableEventsV4(batch);
     _createTableCategoriesV7(batch); // Use V7 with fontFamily column
     _createTableHabitCategoriesV5(batch);
@@ -510,6 +527,11 @@ class HaboModel {
     // Handle 24-hour task columns addition
     if (oldVersion < 11) {
       await _updateTableHabitsAdd24HourFields(db);
+    }
+    
+    // Handle color column addition
+    if (oldVersion < 12) {
+      await _updateTableHabitsAddColor(db);
     }
   }
 

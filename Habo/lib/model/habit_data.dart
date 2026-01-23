@@ -34,6 +34,7 @@ class HabitData {
     this.archived = false,
     this.is24Hour = false,
     this.description = '',
+    this.color = 0,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -78,6 +79,9 @@ class HabitData {
   bool is24Hour;
   DateTime createdAt;
   String description; // Description for 24-hour tasks
+
+  // Custom color for the habit (0 = default theme color)
+  int color;
 
   // Helper methods for habit types
   bool get isNumeric => habitType == HabitType.numeric;
