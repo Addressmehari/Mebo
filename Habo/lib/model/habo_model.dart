@@ -109,8 +109,8 @@ class HaboModel {
           final comment = event['comment'];
           final progressValue = event['progressValue'] as double?;
 
-          // Handle progress data for numeric habits
-          if (dayType == DayType.progress && progressValue != null) {
+          // Handle progress data for numeric, meter and savings habits
+          if ((dayType == DayType.progress || dayType == DayType.meter || dayType == DayType.savings) && progressValue != null) {
             eventsMap[DateTime.parse(event['dateTime'] as String)] = [
               dayType,
               comment,
@@ -581,8 +581,8 @@ class HaboModel {
         'comment': event[1],
       };
 
-      // Add progress value for numeric habits
-      if (event.length > 2 && event[0] == DayType.progress) {
+      // Add progress value for numeric, meter and savings habits
+      if (event.length > 2 && (event[0] == DayType.progress || event[0] == DayType.meter || event[0] == DayType.savings)) {
         eventData['progressValue'] = event[2] as double;
       } else {
         eventData['progressValue'] = 0.0;
