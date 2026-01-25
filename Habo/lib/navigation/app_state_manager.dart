@@ -53,4 +53,12 @@ class AppStateManager extends ChangeNotifier {
     _location = state;
     notifyListeners();
   }
+
+  bool _secretHabits = false;
+  bool get getSecretHabits => _secretHabits;
+
+  void goSecretHabits(bool state) {
+    _secretHabits = state;
+    notifyListeners();
+  }
 }

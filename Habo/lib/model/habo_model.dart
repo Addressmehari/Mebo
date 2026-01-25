@@ -15,7 +15,7 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
 
 class HaboModel {
-  static const _dbVersion = 13;
+  static const _dbVersion = 14;
   Database? _db;
 
   Database get db {
@@ -167,6 +167,7 @@ class HaboModel {
               reminders: (hab['reminders'] != null && hab['reminders'].toString().isNotEmpty)
                   ? (jsonDecode(hab['reminders']) as List).map((e) => parseTimeOfDay(e)).toList()
                   : [],
+              isSecret: (hab['isSecret'] ?? 0) == 0 ? false : true,
             ),
           ),
         );
@@ -359,6 +360,40 @@ class HaboModel {
     )''');
   }
 
+  void _createTableHabitsV14(Batch batch) {
+    batch.execute('DROP TABLE IF EXISTS habits');
+    batch.execute('''CREATE TABLE habits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    position INTEGER,
+    title TEXT,
+    twoDayRule INTEGER,
+    cue TEXT,
+    routine TEXT,
+    reward TEXT,
+    showReward INTEGER,
+    advanced INTEGER,
+    notification INTEGER,
+    notTime TEXT,
+    sanction TEXT,
+    showSanction INTEGER,
+    accountant TEXT,
+    habitType INTEGER DEFAULT 0,
+    targetValue REAL DEFAULT 1.0,
+    partialValue REAL DEFAULT 1.0,
+    unit TEXT DEFAULT '',
+    archived INTEGER DEFAULT 0,
+    questions TEXT DEFAULT '',
+    meterMin REAL DEFAULT 0.0,
+    meterMax REAL DEFAULT 10.0,
+    meterLabels TEXT DEFAULT '',
+    is24Hour INTEGER DEFAULT 0,
+    createdAt TEXT DEFAULT '',
+    color INTEGER DEFAULT 0,
+    reminders TEXT DEFAULT '',
+    isSecret INTEGER DEFAULT 0
+    )''');
+  }
+
   Future<void> _updateTableHabitsAddReminders(Database db) async {
     try {
       final result = await db.rawQuery("PRAGMA table_info(habits)");
@@ -405,6 +440,21 @@ class HaboModel {
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Error adding color column: $e');
+      }
+    }
+  }
+
+  Future<void> _updateTableHabitsAddIsSecret(Database db) async {
+    try {
+      final result = await db.rawQuery("PRAGMA table_info(habits)");
+      final hasColumn = result.any((column) => column['name'] == 'isSecret');
+      
+      if (!hasColumn) {
+        await db.execute("ALTER TABLE habits ADD COLUMN isSecret INTEGER DEFAULT 0");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error adding isSecret column: $e');
       }
     }
   }
@@ -482,7 +532,7 @@ class HaboModel {
 
   void _onCreate(Database db, int version) {
     var batch = db.batch();
-    _createTableHabitsV13(batch);
+    _createTableHabitsV14(batch);
     _createTableEventsV4(batch);
     _createTableCategoriesV7(batch); // Use V7 with fontFamily column
     _createTableHabitCategoriesV5(batch);
@@ -555,6 +605,11 @@ class HaboModel {
     // Handle multiple reminders
     if (oldVersion < 13) {
       await _updateTableHabitsAddReminders(db);
+    }
+    
+    // Handle isSecret field
+    if (oldVersion < 14) {
+      await _updateTableHabitsAddIsSecret(db);
     }
   }
 

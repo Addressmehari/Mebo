@@ -36,6 +36,7 @@ class HabitData {
     this.description = '',
     this.color = 0,
     this.reminders = const [],
+    this.isSecret = false,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -86,6 +87,10 @@ class HabitData {
 
   // 24-hour temporary task
   bool is24Hour;
+  
+  // Secret habit (requires auth to view)
+  bool isSecret;
+  
   DateTime createdAt;
   String description; // Description for 24-hour tasks
 

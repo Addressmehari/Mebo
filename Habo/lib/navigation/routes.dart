@@ -8,4 +8,5 @@ class Routes {
   static String editHabitPath = '/editHabit';
   static String whatsNewPath = '/whatsnew';
   static String locationPath = '/location';
+  static String secretHabitsPath = '/secretHabits';
 }

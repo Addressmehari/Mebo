@@ -11,7 +11,8 @@ import 'package:habo/widgets/hour_24_stories.dart';
 import 'package:provider/provider.dart';
 
 class CalendarColumn extends StatefulWidget {
-  const CalendarColumn({super.key});
+  final bool isSecret;
+  const CalendarColumn({super.key, this.isSecret = false});
 
   @override
   State<CalendarColumn> createState() => _CalendarColumnState();
@@ -26,12 +27,12 @@ class _CalendarColumnState extends State<CalendarColumn> {
     
     // Separate 24-hour habits from regular habits
     final all24HourHabits = habitsManager.getAllHabits
-        .where((habit) => !habit.habitData.archived && habit.habitData.is24Hour)
+        .where((habit) => !habit.habitData.archived && habit.habitData.is24Hour && (widget.isSecret ? habit.habitData.isSecret : !habit.habitData.isSecret))
         .toList();
     
     // Get non-24-hour habits for the main list (filtered by category)
     final calendars = habitsManager.getHabitsByCategory(selectedCategory)
-        .where((habit) => !habit.habitData.is24Hour)
+        .where((habit) => !habit.habitData.is24Hour && (widget.isSecret ? habit.habitData.isSecret : !habit.habitData.isSecret))
         .toList();
 
     return Column(

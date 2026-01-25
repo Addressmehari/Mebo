@@ -223,6 +223,7 @@ class HabitsManager extends ChangeNotifier {
       List<String> meterLabels = const [],
       bool is24Hour = false,
       int color = 0,
+      bool isSecret = false,
       List<TimeOfDay> reminders = const []}) {
     Habit newHabit = Habit(
       habitData: HabitData(
@@ -251,6 +252,7 @@ class HabitsManager extends ChangeNotifier {
         meterLabels: meterLabels,
         is24Hour: is24Hour,
         color: color,
+        isSecret: isSecret,
         reminders: reminders,
       ),
     );
@@ -310,6 +312,7 @@ class HabitsManager extends ChangeNotifier {
     hab.habitData.createdAt = habitData.createdAt;
     hab.habitData.color = habitData.color;
     hab.habitData.reminders = habitData.reminders;
+    hab.habitData.isSecret = habitData.isSecret;
     _habitRepository.updateHabit(hab);
     if (habitData.notification) {
       _notificationService?.setSmartHabitNotification(

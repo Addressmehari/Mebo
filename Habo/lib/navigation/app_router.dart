@@ -12,6 +12,7 @@ import 'package:habo/splash_screen.dart';
 import 'package:habo/statistics/statistics_screen.dart';
 import 'package:habo/whats_new/whats_new_screen.dart';
 import 'package:habo/location/location_screen.dart';
+import 'package:habo/habits/secret_habits_screen.dart';
 
 class AppRouter extends RouterDelegate<HaboRouteConfiguration>
     with
@@ -59,6 +60,7 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
         // Onboarding disabled
         // if (appStateManager.getOnboarding || !settingsManager.getSeenOnboarding)
         //   OnboardingScreen.page(),
+        if (appStateManager.getSecretHabits) SecretHabitsScreen.page(),
         if (appStateManager.getCreateHabit) EditHabitScreen.page(null),
         if (appStateManager.getEditHabit != null)
           EditHabitScreen.page(appStateManager.getEditHabit!),
@@ -105,6 +107,10 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
       if (page.name == Routes.locationPath) {
         appStateManager.goLocation(false);
       }
+
+      if (page.name == Routes.secretHabitsPath) {
+        appStateManager.goSecretHabits(false);
+      }
     });
   }
 
@@ -131,6 +137,9 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
     }
     if (appStateManager.getLocation) {
       return const HaboRouteConfiguration(path: '/location');
+    }
+    if (appStateManager.getSecretHabits) {
+      return const HaboRouteConfiguration(path: '/secrethabits');
     }
     if (appStateManager.getWhatsNew) {
       return const HaboRouteConfiguration(path: '/whatsnew');

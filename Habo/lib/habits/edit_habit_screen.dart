@@ -72,6 +72,8 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
   
   // 24-hour task flag
   bool is24Hour = false;
+  // Secret habit flag
+  bool isSecret = false;
   int selectedColor = 0;
   TextEditingController description = TextEditingController();
 
@@ -249,6 +251,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
       meterMaxController.text = widget.habitData!.meterMax.toStringAsFixed(0);
       meterLabels = List.from(widget.habitData!.meterLabels);
       is24Hour = widget.habitData!.is24Hour;
+      isSecret = widget.habitData!.isSecret;
       selectedColor = widget.habitData!.color;
       reminders = List.from(widget.habitData!.reminders);
       // Fallback for existing habits with single notification
@@ -434,6 +437,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     meterMax: double.tryParse(meterMaxController.text) ?? 10.0,
                     meterLabels: meterLabels,
                     is24Hour: is24Hour,
+                    isSecret: isSecret,
                     createdAt: widget.habitData!.createdAt,
                     color: selectedColor,
                     reminders: reminders,
@@ -472,6 +476,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     meterMax: double.tryParse(meterMaxController.text) ?? 10.0,
                     meterLabels: meterLabels,
                     is24Hour: is24Hour,
+                    isSecret: isSecret,
                     color: selectedColor,
                     reminders: reminders,
                   );
@@ -595,6 +600,30 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                           ],
                         ),
                       ),
+                    
+                    // Secret habit toggle
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 25),
+                      leading: Icon(
+                        Icons.lock_outline,
+                        color: isSecret ? Theme.of(context).colorScheme.primary : null,
+                      ),
+                      title: const Text('Secret Habit'),
+                      subtitle: isSecret 
+                          ? const Text(
+                              'Only visible in secret mode',
+                              style: TextStyle(fontSize: 12, color: Colors.purple),
+                            )
+                          : null,
+                      trailing: Switch(
+                        value: isSecret,
+                        onChanged: (value) {
+                          setState(() {
+                            isSecret = value;
+                          });
+                        },
+                      ),
+                    ),
                     
                     // Color Palette Selector
                     const SizedBox(height: 10),
