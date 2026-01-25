@@ -309,6 +309,7 @@ class HabitsManager extends ChangeNotifier {
     hab.habitData.is24Hour = habitData.is24Hour;
     hab.habitData.createdAt = habitData.createdAt;
     hab.habitData.color = habitData.color;
+    hab.habitData.reminders = habitData.reminders;
     _habitRepository.updateHabit(hab);
     if (habitData.notification) {
       _notificationService?.setSmartHabitNotification(

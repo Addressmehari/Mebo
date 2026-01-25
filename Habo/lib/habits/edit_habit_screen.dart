@@ -644,15 +644,13 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                                           )
                                       ],
                                     ),
-                                    child: index == 0
+                                    child: isSelected
                                         ? const Center(
-                                            child: Icon(Icons.colorize, color: Colors.white, size: 20),
+                                            child: Icon(Icons.check,
+                                                color: Colors.black54,
+                                                size: 24),
                                           )
-                                        : (isSelected
-                                            ? const Center(
-                                                child: Icon(Icons.check, color: Colors.black54, size: 24),
-                                              )
-                                            : null),
+                                        : null,
                                   ),
                                 );
                               }),
