@@ -135,7 +135,7 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
       initializeNotifications();
     }
 
-    GoogleFonts.config.allowRuntimeFetching = false;
+    GoogleFonts.config.allowRuntimeFetching = true;
 
     // Create AppRouter with initialized habitsManager
     final appRouter = AppRouter(
