@@ -12,7 +12,6 @@ import 'package:habo/notifications.dart';
 import 'package:habo/settings/settings_manager.dart';
 import 'package:habo/widgets/text_container.dart';
 import 'package:habo/screens/category_selection_screen.dart';
-import 'package:habo/widgets/habit_overlay_sheet.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -1218,96 +1217,8 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                           value: notification,
                           onChanged: (value) {
                             notification = value;
-                            if (!notification) overlayReminder = false;
                             setState(() {});
                           },
-                        ),
-                      ),
-                    if (platformSupportsNotifications())
-                      ListTile(
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 25),
-                        enabled: notification,
-                        title: const Text('Overlay reminder?'),
-                        trailing: Checkbox(
-                          value: overlayReminder,
-                          onChanged: notification
-                              ? (value) {
-                                  setState(() {
-                                    overlayReminder = value ?? false;
-                                  });
-                                }
-                              : null,
-                        ),
-                      ),
-                    if (platformSupportsNotifications() && notification)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            final tempHabit = HabitData(
-                              id: widget.habitData?.id,
-                              position: widget.habitData?.position ?? 0,
-                              title: title.text.isNotEmpty ? title.text : 'Test Habit',
-                              twoDayRule: twoDayRule,
-                              cue: cue.text,
-                              routine: routine.text,
-                              reward: reward.text,
-                              showReward: showReward,
-                              advanced: advanced,
-                              notification: notification,
-                              notTime: notTime,
-                              events: widget.habitData?.events ?? SplayTreeMap<DateTime, List>(),
-                              sanction: sanction.text,
-                              showSanction: showSanction,
-                              accountant: accountant.text,
-                              habitType: habitType,
-                              targetValue: double.tryParse(targetValue.text) ?? 100.0,
-                              partialValue: double.tryParse(partialValue.text) ?? 10.0,
-                              unit: unit.text,
-                              categories: selectedCategories,
-                              questions: questions,
-                              meterMin: double.tryParse(meterMinController.text) ?? 0.0,
-                              meterMax: double.tryParse(meterMaxController.text) ?? 10.0,
-                              meterLabels: meterLabels,
-                              reminders: reminders,
-                              overlayReminder: overlayReminder,
-                            );
-
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (context) => HabitOverlaySheet(
-                                habit: tempHabit,
-                                onBooleanComplete: (done) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(done
-                                          ? 'Habit marked as done!'
-                                          : 'Habit marked as NOT done'),
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                },
-                                onMeterComplete: (value) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Meter value saved: $value'),
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.play_circle_outline),
-                          label: const Text('Test Overlay Sheet'),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 45),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                          ),
                         ),
                       ),
                     if (platformSupportsNotifications())

@@ -53,6 +53,11 @@ class NotificationService {
               habitTitle: data.title,
               habitType: data.habitType,
               currentStreak: data.streak,
+              meterMin: data.meterMin,
+              meterMax: data.meterMax,
+              firstQuestion: data.questions.isNotEmpty
+                  ? data.questions.first
+                  : null,
             );
           }
         }
@@ -74,12 +79,16 @@ class NotificationService {
   }
 
   /// Sets a smart notification with personalized motivational messages
+  /// and habit-type-specific action buttons.
   void setSmartHabitNotification({
     required int id,
     required List<TimeOfDay> times,
     required String habitTitle,
     required HabitType habitType,
     int? currentStreak,
+    double meterMin = 0,
+    double meterMax = 10,
+    String? firstQuestion,
   }) {
     // Cancel existing notifications for this habit first to ensure clean state
     disableHabitNotification(id);
@@ -96,6 +105,9 @@ class NotificationService {
         habitTitle: habitTitle,
         habitType: habitType,
         currentStreak: currentStreak,
+        meterMin: meterMin,
+        meterMax: meterMax,
+        firstQuestion: firstQuestion,
       );
     }
   }

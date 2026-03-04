@@ -167,6 +167,35 @@ class HabitsManager extends ChangeNotifier {
     _updateHomeWidgetAsync();
   }
 
+  /// Called from notification action buttons to complete a habit.
+  /// Unlike [addEvent], this also updates the in-memory events map
+  /// and calls [notifyListeners] so the UI refreshes automatically.
+  void completeHabitFromNotification(int habitId, DateTime date, List event) {
+    final habit = findHabitById(habitId);
+    if (habit == null) {
+      debugPrint('[NotificationAction] Habit $habitId not found in memory');
+      return;
+    }
+
+    // 1. Update the in-memory events map on the habit
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    habit.habitData.events[normalizedDate] = event;
+
+    // 2. Persist to database
+    _eventRepository.insertEvent(habitId, normalizedDate, event);
+
+    // 3. Handle notification rescheduling (push to tomorrow if done today)
+    _notificationService?.handleHabitEventAdded(habitId, normalizedDate, event);
+
+    // 4. Update home widget
+    _updateHomeWidgetAsync();
+
+    // 5. Rebuild the UI
+    notifyListeners();
+
+    debugPrint('[NotificationAction] Habit $habitId updated for $normalizedDate');
+  }
+
   void deleteEvent(int id, DateTime dateTime) {
     _eventRepository.deleteEvent(id, dateTime);
     _notificationService?.handleHabitEventDeleted(id, dateTime);
@@ -274,6 +303,9 @@ class HabitsManager extends ChangeNotifier {
               times: reminders.isNotEmpty ? reminders : [notTime],
               habitTitle: title,
               habitType: habitType,
+              meterMin: meterMin,
+              meterMax: meterMax,
+              firstQuestion: questions.isNotEmpty ? questions.first : null,
             );
           } else {
           _notificationService?.disableHabitNotification(id);
@@ -324,6 +356,9 @@ class HabitsManager extends ChangeNotifier {
         habitTitle: habitData.title,
         habitType: habitData.habitType,
         currentStreak: hab.habitData.streak,
+        meterMin: habitData.meterMin,
+        meterMax: habitData.meterMax,
+        firstQuestion: habitData.questions.isNotEmpty ? habitData.questions.first : null,
       );
     } else {
       _notificationService?.disableHabitNotification(habitData.id!);
@@ -386,6 +421,9 @@ class HabitsManager extends ChangeNotifier {
         habitTitle: habit.habitData.title,
         habitType: habit.habitData.habitType,
         currentStreak: habit.habitData.streak,
+        meterMin: habit.habitData.meterMin,
+        meterMax: habit.habitData.meterMax,
+        firstQuestion: habit.habitData.questions.isNotEmpty ? habit.habitData.questions.first : null,
       );
     }
 

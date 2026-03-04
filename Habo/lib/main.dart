@@ -22,6 +22,7 @@ import 'package:habo/generated/l10n.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:habo/constants.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:habo/services/notification_action_handler.dart';
 
 void main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,10 @@ void main() async {
     windowManager.setMaximumSize(Size.infinite);
   }
   addLicenses();
+  // Set up notification action listeners before runApp
+  if (Platform.isAndroid || Platform.isIOS) {
+    NotificationActionHandler.setupListeners();
+  }
   runApp(
     const Habo(),
   );
@@ -134,6 +139,9 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
     if (platformSupportsNotifications()) {
       initializeNotifications();
     }
+
+    // Initialize the notification action handler with the habitsManager
+    NotificationActionHandler.initialize(habitsManager);
 
     GoogleFonts.config.allowRuntimeFetching = true;
 
