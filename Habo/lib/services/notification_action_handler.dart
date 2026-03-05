@@ -13,22 +13,42 @@ import 'package:habo/habits/habits_manager.dart';
 /// - Diary habits: Inline text reply (WhatsApp-style)
 class NotificationActionHandler {
   static HabitsManager? _habitsManager;
+  static final List<ReceivedAction> _actionQueue = [];
 
   /// Must be called once during app initialization so the handler
   /// can write events back to the habit manager.
   static void initialize(HabitsManager habitsManager) {
     _habitsManager = habitsManager;
+    debugPrint('[NotificationAction] Handler initialized with HabitsManager');
+    
+    // Process any queued actions that were received before manager was ready
+    if (_actionQueue.isNotEmpty) {
+      debugPrint('[NotificationAction] Processing ${_actionQueue.length} queued actions');
+      final actions = List<ReceivedAction>.from(_actionQueue);
+      _actionQueue.clear();
+      for (var action in actions) {
+        onActionReceived(action);
+      }
+    }
   }
 
   /// Register the awesome_notifications action listeners.
-  /// Call this once in main before runApp.
-  static void setupListeners() {
-    AwesomeNotifications().setListeners(
+  /// Must be called after AwesomeNotifications().initialize() completes.
+  static Future<void> setupListeners() async {
+    await AwesomeNotifications().setListeners(
       onActionReceivedMethod: onActionReceived,
       onNotificationCreatedMethod: onNotificationCreated,
       onNotificationDisplayedMethod: onNotificationDisplayed,
       onDismissActionReceivedMethod: onDismissActionReceived,
     );
+    debugPrint('[NotificationAction] Listeners registered successfully');
+
+    // Check if the app was launched by a notification action
+    ReceivedAction? initialAction = await AwesomeNotifications().getInitialNotificationAction();
+    if (initialAction != null) {
+      debugPrint('[NotificationAction] Initial action detected: ${initialAction.buttonKeyPressed}');
+      onActionReceived(initialAction);
+    }
   }
 
   /// Called when user taps on a notification or presses an action button.
@@ -39,10 +59,12 @@ class NotificationActionHandler {
     final String? payload = receivedAction.payload?['habitType'];
     final String inputText = receivedAction.buttonKeyInput;
 
-    if (habitId == null || _habitsManager == null) {
-      debugPrint(
-          '[NotificationAction] Skipped: habitId=$habitId, '
-          'manager=${_habitsManager != null ? "ok" : "null"}');
+    if (habitId == null) return;
+
+    // If manager isn't ready, queue the action for later
+    if (_habitsManager == null) {
+      debugPrint('[NotificationAction] Manager not ready, queuing action: $buttonKey');
+      _actionQueue.add(receivedAction);
       return;
     }
 
@@ -53,7 +75,7 @@ class NotificationActionHandler {
     final DateTime today = DateTime(now.year, now.month, now.day);
 
     debugPrint(
-        '[NotificationAction] buttonKey=$buttonKey, habitId=$actualHabitId, '
+        '[NotificationAction] Processing: buttonKey=$buttonKey, habitId=$actualHabitId, '
         'payload=$payload, inputText=$inputText');
 
     switch (buttonKey) {
@@ -113,7 +135,6 @@ class NotificationActionHandler {
   }
 
   /// Resolves the original habit ID from a notification ID.
-  /// Secondary reminders have IDs like habitId + (index * 100000).
   static int _resolveHabitId(int notificationId) {
     if (notificationId >= 100000) {
       return notificationId % 100000;
@@ -143,17 +164,12 @@ class NotificationActionHandler {
     }
   }
 
-  // ── Required listener stubs ──
+  @pragma('vm:entry-point')
+  static Future<void> onNotificationCreated(ReceivedNotification receivedNotification) async {}
 
   @pragma('vm:entry-point')
-  static Future<void> onNotificationCreated(
-      ReceivedNotification receivedNotification) async {}
+  static Future<void> onNotificationDisplayed(ReceivedNotification receivedNotification) async {}
 
   @pragma('vm:entry-point')
-  static Future<void> onNotificationDisplayed(
-      ReceivedNotification receivedNotification) async {}
-
-  @pragma('vm:entry-point')
-  static Future<void> onDismissActionReceived(
-      ReceivedAction receivedAction) async {}
+  static Future<void> onDismissActionReceived(ReceivedAction receivedAction) async {}
 }

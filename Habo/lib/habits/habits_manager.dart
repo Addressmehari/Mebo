@@ -15,6 +15,7 @@ import 'package:habo/services/notification_service.dart';
 import 'package:habo/services/ui_feedback_service.dart';
 import 'package:habo/services/home_widget_service.dart';
 import 'package:habo/helpers/widget_update_helper.dart';
+import 'package:habo/helpers.dart';
 
 class HabitsManager extends ChangeNotifier {
   final HabitRepository _habitRepository;
@@ -177,8 +178,10 @@ class HabitsManager extends ChangeNotifier {
       return;
     }
 
-    // 1. Update the in-memory events map on the habit
-    final normalizedDate = DateTime(date.year, date.month, date.day);
+    // 1. Use transformDate to match the key format used everywhere else
+    //    (DateTime.utc with hour=12, matching how the calendar stores events)
+    final normalizedDate = transformDate(date);
+    debugPrint('[HabitsManager] Updating habit $habitId for date $normalizedDate with event $event');
     habit.habitData.events[normalizedDate] = event;
 
     // 2. Persist to database
@@ -193,7 +196,7 @@ class HabitsManager extends ChangeNotifier {
     // 5. Rebuild the UI
     notifyListeners();
 
-    debugPrint('[NotificationAction] Habit $habitId updated for $normalizedDate');
+    debugPrint('[NotificationAction] Habit $habitId update sequence complete');
   }
 
   void deleteEvent(int id, DateTime dateTime) {

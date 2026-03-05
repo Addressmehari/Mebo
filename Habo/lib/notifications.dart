@@ -8,8 +8,8 @@ import 'package:habo/services/notification_messages.dart';
 
 bool platformSupportsNotifications() => Platform.isAndroid || Platform.isIOS;
 
-void initializeNotifications() {
-  AwesomeNotifications().initialize(
+Future<void> initializeNotifications() async {
+  await AwesomeNotifications().initialize(
     'resource://raw/res_app_icon',
     [
       NotificationChannel(
@@ -178,14 +178,14 @@ Future<void> _setupHeadsUpNotification({
       actionButtons = [
         NotificationActionButton(
           key: 'DONE',
-          label: '✓ Done',
-          actionType: ActionType.SilentAction,
+          label: 'Done',
+          actionType: ActionType.Default,
           color: HaboColors.primary,
         ),
         NotificationActionButton(
           key: 'SKIP',
-          label: '⏭ Skip',
-          actionType: ActionType.SilentAction,
+          label: 'Skip',
+          actionType: ActionType.Default,
           color: HaboColors.skip,
         ),
       ];
@@ -200,17 +200,17 @@ Future<void> _setupHeadsUpNotification({
         NotificationActionButton(
           key: 'METER_LOW',
           label: '🔽 $lowLabel',
-          actionType: ActionType.SilentAction,
+          actionType: ActionType.Default,
         ),
         NotificationActionButton(
           key: 'METER_MID',
           label: '➡️ $midLabel',
-          actionType: ActionType.SilentAction,
+          actionType: ActionType.Default,
         ),
         NotificationActionButton(
           key: 'METER_HIGH',
           label: '🔼 $highLabel',
-          actionType: ActionType.SilentAction,
+          actionType: ActionType.Default,
         ),
       ];
       break;
@@ -220,7 +220,7 @@ Future<void> _setupHeadsUpNotification({
         NotificationActionButton(
           key: 'DIARY_REPLY',
           label: firstQuestion ?? '✍️ Write...',
-          actionType: ActionType.SilentAction,
+          actionType: ActionType.Default,
           requireInputText: true,
         ),
       ];
@@ -232,7 +232,7 @@ Future<void> _setupHeadsUpNotification({
         NotificationActionButton(
           key: 'DONE',
           label: '✓ Done',
-          actionType: ActionType.SilentAction,
+          actionType: ActionType.Default,
           color: HaboColors.primary,
         ),
       ];

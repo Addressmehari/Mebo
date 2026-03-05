@@ -33,9 +33,11 @@ void main() async {
     windowManager.setMaximumSize(Size.infinite);
   }
   addLicenses();
-  // Set up notification action listeners before runApp
-  if (Platform.isAndroid || Platform.isIOS) {
-    NotificationActionHandler.setupListeners();
+  // Initialize notification system BEFORE runApp (required by awesome_notifications)
+  // Both calls are awaited to ensure the system is fully ready
+  if (platformSupportsNotifications()) {
+    await initializeNotifications();
+    await NotificationActionHandler.setupListeners();
   }
   runApp(
     const Habo(),
@@ -136,11 +138,8 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
     );
     await habitsManager.initialize();
 
-    if (platformSupportsNotifications()) {
-      initializeNotifications();
-    }
-
-    // Initialize the notification action handler with the habitsManager
+    // Give the notification action handler access to habitsManager
+    // so button taps (Done/Skip/etc.) can write events to DB and update UI
     NotificationActionHandler.initialize(habitsManager);
 
     GoogleFonts.config.allowRuntimeFetching = true;
