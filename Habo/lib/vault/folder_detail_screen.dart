@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:url_launcher/url_launcher.dart';
+import 'package:open_filex/open_filex.dart';
 import 'dart:io';
 
 class FolderDetailScreen extends StatefulWidget {
@@ -181,13 +181,10 @@ class FileListTile extends StatelessWidget {
       final fileObj = File(fullPath);
       
       if (await fileObj.exists()) {
-        final uri = Uri.file(fullPath);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri);
-        } else {
-          // If we can't launch it, maybe suggest something
+        final result = await OpenFilex.open(fullPath);
+        if (result.type != ResultType.done) {
            ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No app found to open this file type.')),
+            SnackBar(content: Text('Error opening file: ${result.message}')),
           );
         }
       } else {
