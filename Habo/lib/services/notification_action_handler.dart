@@ -1,27 +1,23 @@
 import 'dart:convert';
-
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:habo/constants.dart';
 import 'package:habo/habits/habits_manager.dart';
+import 'package:habo/habits/habit.dart';
+import 'package:habo/model/habo_model.dart';
+import 'package:habo/helpers.dart';
+import 'package:habo/notifications.dart' as notifications;
 
 /// Handles notification action button presses and inline replies.
-///
-/// This service processes the user's interaction with heads-up notifications:
-/// - Boolean habits: "Done" / "Skip" buttons
-/// - Meter habits: Preset value buttons (Low / Mid / High)
-/// - Diary habits: Inline text reply (WhatsApp-style)
 class NotificationActionHandler {
   static HabitsManager? _habitsManager;
   static final List<ReceivedAction> _actionQueue = [];
 
-  /// Must be called once during app initialization so the handler
-  /// can write events back to the habit manager.
+  /// Must be called once during app initialization.
   static void initialize(HabitsManager habitsManager) {
     _habitsManager = habitsManager;
     debugPrint('[NotificationAction] Handler initialized with HabitsManager');
     
-    // Process any queued actions that were received before manager was ready
     if (_actionQueue.isNotEmpty) {
       debugPrint('[NotificationAction] Processing ${_actionQueue.length} queued actions');
       final actions = List<ReceivedAction>.from(_actionQueue);
@@ -33,17 +29,15 @@ class NotificationActionHandler {
   }
 
   /// Register the awesome_notifications action listeners.
-  /// Must be called after AwesomeNotifications().initialize() completes.
   static Future<void> setupListeners() async {
     await AwesomeNotifications().setListeners(
-      onActionReceivedMethod: onActionReceived,
-      onNotificationCreatedMethod: onNotificationCreated,
-      onNotificationDisplayedMethod: onNotificationDisplayed,
-      onDismissActionReceivedMethod: onDismissActionReceived,
+      onActionReceivedMethod: onActionReceivedMethod,
+      onNotificationCreatedMethod: onNotificationCreatedMethod,
+      onNotificationDisplayedMethod: onNotificationDisplayedMethod,
+      onDismissActionReceivedMethod: onDismissActionReceivedMethod,
     );
     debugPrint('[NotificationAction] Listeners registered successfully');
 
-    // Check if the app was launched by a notification action
     ReceivedAction? initialAction = await AwesomeNotifications().getInitialNotificationAction();
     if (initialAction != null) {
       debugPrint('[NotificationAction] Initial action detected: ${initialAction.buttonKeyPressed}');
@@ -55,121 +49,177 @@ class NotificationActionHandler {
   @pragma('vm:entry-point')
   static Future<void> onActionReceived(ReceivedAction receivedAction) async {
     final String buttonKey = receivedAction.buttonKeyPressed;
-    final int? habitId = receivedAction.id;
-    final String? payload = receivedAction.payload?['habitType'];
-    final String inputText = receivedAction.buttonKeyInput;
+    final int? rawNotificationId = receivedAction.id;
+    
+    // Fallback: try to get habit ID from payload if it exists
+    final String? payloadHabitId = receivedAction.payload?['habitId'];
+    final int? habitIdToResolve = (payloadHabitId != null) ? int.tryParse(payloadHabitId) : rawNotificationId;
 
-    if (habitId == null) return;
-
-    // If manager isn't ready, queue the action for later
-    if (_habitsManager == null) {
-      debugPrint('[NotificationAction] Manager not ready, queuing action: $buttonKey');
-      _actionQueue.add(receivedAction);
+    if (habitIdToResolve == null) {
+      debugPrint('[NotificationAction] Error: No habit ID found in notification action');
       return;
     }
 
-    // Resolve the actual habit ID (secondary notification IDs are offset by 100000*index)
-    final int actualHabitId = _resolveHabitId(habitId);
+    final int actualHabitId = _resolveHabitId(habitIdToResolve);
+    final String inputText = receivedAction.buttonKeyInput;
 
-    final DateTime now = DateTime.now();
-    final DateTime today = DateTime(now.year, now.month, now.day);
+    final DateTime today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final DateTime normalizedDate = transformDate(today);
 
-    debugPrint(
-        '[NotificationAction] Processing: buttonKey=$buttonKey, habitId=$actualHabitId, '
-        'payload=$payload, inputText=$inputText');
+    debugPrint('[NotificationAction] Handle: habit=$actualHabitId, button=$buttonKey');
 
+    // ───── Background Isolate Handling ─────
+    if (_habitsManager == null) {
+      await _handleInBackground(actualHabitId, buttonKey, inputText, normalizedDate);
+      return;
+    }
+
+    // ───── Foreground Handling ─────
     switch (buttonKey) {
-      // ── Boolean habit actions ──
       case 'DONE':
-        _habitsManager!.completeHabitFromNotification(
-            actualHabitId, today, [DayType.check, '']);
+        _habitsManager!.completeHabitFromNotification(actualHabitId, today, [DayType.check, '']);
         break;
 
       case 'SKIP':
-        _habitsManager!.completeHabitFromNotification(
-            actualHabitId, today, [DayType.skip, '']);
+        _habitsManager!.completeHabitFromNotification(actualHabitId, today, [DayType.skip, '']);
         break;
 
-      // ── Meter habit actions ──
       case 'METER_LOW':
-        final double value = _getMeterValue(actualHabitId, 'low');
-        _habitsManager!.completeHabitFromNotification(
-            actualHabitId, today, [DayType.meter, '', value]);
+        final value = _getMeterValue(actualHabitId, 'low');
+        _habitsManager!.completeHabitFromNotification(actualHabitId, today, [DayType.meter, '', value]);
         break;
 
       case 'METER_MID':
-        final double value = _getMeterValue(actualHabitId, 'mid');
-        _habitsManager!.completeHabitFromNotification(
-            actualHabitId, today, [DayType.meter, '', value]);
+        final value = _getMeterValue(actualHabitId, 'mid');
+        _habitsManager!.completeHabitFromNotification(actualHabitId, today, [DayType.meter, '', value]);
         break;
 
       case 'METER_HIGH':
-        final double value = _getMeterValue(actualHabitId, 'high');
-        _habitsManager!.completeHabitFromNotification(
-            actualHabitId, today, [DayType.meter, '', value]);
+        final value = _getMeterValue(actualHabitId, 'high');
+        _habitsManager!.completeHabitFromNotification(actualHabitId, today, [DayType.meter, '', value]);
         break;
 
-      // ── Diary habit actions (inline reply) ──
       case 'DIARY_REPLY':
         if (inputText.trim().isNotEmpty) {
-          // Get the habit's first question to use as key
           final habit = _habitsManager!.findHabitById(actualHabitId);
-          if (habit != null && habit.habitData.questions.isNotEmpty) {
-            final firstQuestion = habit.habitData.questions.first;
-            final diaryData = jsonEncode({firstQuestion: inputText.trim()});
-            _habitsManager!.completeHabitFromNotification(
-                actualHabitId, today, [DayType.check, diaryData]);
-          } else {
-            // Fallback – store as plain text
-            _habitsManager!.completeHabitFromNotification(
-                actualHabitId, today, [DayType.check, inputText.trim()]);
-          }
+          final event = _buildDiaryEvent(habit, inputText);
+          _habitsManager!.completeHabitFromNotification(actualHabitId, today, event);
         }
         break;
-
-      default:
-        // User tapped the notification body itself (no specific button)
-        // Just open the app – no further action needed
-        break;
     }
   }
 
-  /// Resolves the original habit ID from a notification ID.
+  static Future<void> _handleInBackground(int habitId, String buttonKey, String inputText, DateTime date) async {
+    try {
+      WidgetsFlutterBinding.ensureInitialized();
+      await notifications.initializeNotifications();
+      
+      final haboModel = HaboModel();
+      await haboModel.initDatabase();
+      
+      final habit = await haboModel.getHabitById(habitId);
+      if (habit == null) return;
+
+      List? event;
+      String? msg;
+
+      switch (buttonKey) {
+        case 'DONE':
+          event = [DayType.check, ''];
+          msg = 'Habit "${habit.habitData.title}" check marked! ✓';
+          break;
+        case 'SKIP':
+          event = [DayType.skip, ''];
+          msg = 'Habit "${habit.habitData.title}" skipped ⏭';
+          break;
+        case 'METER_LOW':
+          final v = _calculateMeterValue(habit, 'low');
+          event = [DayType.meter, '', v];
+          msg = 'Logged ${v.toStringAsFixed(1)} for "${habit.habitData.title}"';
+          break;
+        case 'METER_MID':
+          final v = _calculateMeterValue(habit, 'mid');
+          event = [DayType.meter, '', v];
+          msg = 'Logged ${v.toStringAsFixed(1)} for "${habit.habitData.title}"';
+          break;
+        case 'METER_HIGH':
+          final v = _calculateMeterValue(habit, 'high');
+          event = [DayType.meter, '', v];
+          msg = 'Logged ${v.toStringAsFixed(1)} for "${habit.habitData.title}"';
+          break;
+        case 'DIARY_REPLY':
+          if (inputText.trim().isNotEmpty) {
+            event = _buildDiaryEvent(habit, inputText);
+            msg = 'Diary saved for "${habit.habitData.title}" ✍️';
+          }
+          break;
+      }
+
+      if (event != null) {
+        await haboModel.insertEvent(habitId, date, event);
+        if (event[0] == DayType.check) {
+          await notifications.rescheduleNotificationForTomorrow(habitId);
+        }
+        
+        // Final confirmation notification
+        await AwesomeNotifications().createNotification(
+          content: NotificationContent(
+            id: 999000 + habitId,
+            channelKey: 'app_notifications_habo',
+            title: 'Habo: Action Recorded',
+            body: msg ?? 'Success',
+            summary: habit.habitData.title,
+            category: NotificationCategory.Status,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('[Background] Fail: $e');
+    }
+  }
+
+  static List _buildDiaryEvent(Habit? habit, String text) {
+    if (habit != null && habit.habitData.questions.isNotEmpty) {
+      final firstQuestion = habit.habitData.questions.first;
+      final diaryData = jsonEncode({firstQuestion: text.trim()});
+      return [DayType.check, diaryData];
+    }
+    return [DayType.check, text.trim()];
+  }
+
   static int _resolveHabitId(int notificationId) {
-    if (notificationId >= 100000) {
-      return notificationId % 100000;
-    }
-    return notificationId;
+    return (notificationId >= 100000) ? (notificationId % 100000) : notificationId;
   }
 
-  /// Calculate meter value for Low / Mid / High presets.
   static double _getMeterValue(int habitId, String level) {
     final habit = _habitsManager?.findHabitById(habitId);
-    double min = 0;
-    double max = 10;
-    if (habit != null) {
-      min = habit.habitData.meterMin;
-      max = habit.habitData.meterMax;
-    }
-    final range = max - min;
-    switch (level) {
-      case 'low':
-        return min + range * 0.25;
-      case 'mid':
-        return min + range * 0.5;
-      case 'high':
-        return min + range * 0.75;
-      default:
-        return min + range * 0.5;
-    }
+    if (habit == null) return 5.0;
+    return _calculateMeterValue(habit, level);
   }
 
-  @pragma('vm:entry-point')
-  static Future<void> onNotificationCreated(ReceivedNotification receivedNotification) async {}
-
-  @pragma('vm:entry-point')
-  static Future<void> onNotificationDisplayed(ReceivedNotification receivedNotification) async {}
-
-  @pragma('vm:entry-point')
-  static Future<void> onDismissActionReceived(ReceivedAction receivedAction) async {}
+  static double _calculateMeterValue(Habit habit, String level) {
+    final double min = habit.habitData.meterMin;
+    final double max = habit.habitData.meterMax;
+    final range = max - min;
+    switch (level) {
+      case 'low': return min + range * 0.25;
+      case 'mid': return min + range * 0.5;
+      case 'high': return min + range * 0.75;
+      default: return min + range * 0.5;
+    }
+  }
 }
+
+@pragma('vm:entry-point')
+Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
+  await NotificationActionHandler.onActionReceived(receivedAction);
+}
+
+@pragma('vm:entry-point')
+Future<void> onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {}
+
+@pragma('vm:entry-point')
+Future<void> onNotificationDisplayedMethod(ReceivedNotification receivedNotification) async {}
+
+@pragma('vm:entry-point')
+Future<void> onDismissActionReceivedMethod(ReceivedAction receivedAction) async {}

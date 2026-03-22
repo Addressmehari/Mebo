@@ -93,6 +93,90 @@ class HaboModel {
     }
   }
 
+  Future<Habit?> getHabitById(int id) async {
+    final List<Map<String, dynamic>> habits =
+        await db.query('habits', where: 'id = $id', limit: 1);
+    if (habits.isEmpty) return null;
+
+    final hab = habits.first;
+    SplayTreeMap<DateTime, List> eventsMap = SplayTreeMap<DateTime, List>();
+    final events = await db.query('events', where: 'id = $id');
+    for (var event in events) {
+      final dayType = DayType.values[event['dayType'] as int];
+      final comment = event['comment'];
+      final progressValue = event['progressValue'] as double?;
+
+      // Handle progress data for numeric, meter and savings habits
+      if ((dayType == DayType.progress ||
+              dayType == DayType.meter ||
+              dayType == DayType.savings) &&
+          progressValue != null) {
+        eventsMap[DateTime.parse(event['dateTime'] as String)] = [
+          dayType,
+          comment,
+          progressValue
+        ];
+      } else {
+        eventsMap[DateTime.parse(event['dateTime'] as String)] = [
+          dayType,
+          comment
+        ];
+      }
+    }
+
+    // Load categories for this habit
+    final categories = await getCategoriesForHabit(id);
+
+    return Habit(
+      habitData: HabitData(
+        id: id,
+        position: hab['position'],
+        title: hab['title'],
+        twoDayRule: hab['twoDayRule'] == 0 ? false : true,
+        cue: hab['cue'] ?? '',
+        routine: hab['routine'] ?? '',
+        reward: hab['reward'] ?? '',
+        showReward: hab['showReward'] == 0 ? false : true,
+        advanced: hab['advanced'] == 0 ? false : true,
+        notification: hab['notification'] == 0 ? false : true,
+        notTime: parseTimeOfDay(hab['notTime']),
+        events: eventsMap,
+        sanction: hab['sanction'] ?? '',
+        showSanction: (hab['showSanction'] ?? 0) == 0 ? false : true,
+        accountant: hab['accountant'] ?? '',
+        habitType: HabitType.values[hab['habitType'] ?? 0],
+        targetValue: (hab['targetValue'] ?? 1.0).toDouble(),
+        partialValue: (hab['partialValue'] ?? 1.0).toDouble(),
+        unit: hab['unit'] ?? '',
+        categories: categories,
+        questions: (hab['questions'] != null &&
+                hab['questions'].toString().isNotEmpty)
+            ? List<String>.from(jsonDecode(hab['questions']))
+            : [],
+        meterMin: (hab['meterMin'] ?? 0.0).toDouble(),
+        meterMax: (hab['meterMax'] ?? 10.0).toDouble(),
+        meterLabels: (hab['meterLabels'] != null &&
+                hab['meterLabels'].toString().isNotEmpty)
+            ? List<String>.from(jsonDecode(hab['meterLabels']))
+            : [],
+        archived: hab['archived'] == 0 ? false : true,
+        is24Hour: (hab['is24Hour'] ?? 0) == 0 ? false : true,
+        createdAt:
+            hab['createdAt'] != null && hab['createdAt'].toString().isNotEmpty
+                ? DateTime.parse(hab['createdAt'])
+                : DateTime.now(),
+        color: hab['color'] ?? 0,
+        reminders:
+            (hab['reminders'] != null && hab['reminders'].toString().isNotEmpty)
+                ? (jsonDecode(hab['reminders']) as List)
+                    .map((e) => parseTimeOfDay(e))
+                    .toList()
+                : [],
+        isSecret: (hab['isSecret'] ?? 0) == 0 ? false : true,
+      ),
+    );
+  }
+
   Future<List<Habit>> getAllHabits() async {
     final List<Map<String, dynamic>> habits =
         await db.query('habits', orderBy: 'position');

@@ -82,6 +82,7 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
       _startDayChangeTimer();
       if (_isInitialized) {
         _habitManager.checkDayChange();
+        _habitManager.refresh(); // Sync background isolate changes to UI
       }
     } else if (state == AppLifecycleState.paused) {
       _stopDayChangeTimer();

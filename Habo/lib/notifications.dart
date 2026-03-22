@@ -179,13 +179,13 @@ Future<void> _setupHeadsUpNotification({
         NotificationActionButton(
           key: 'DONE',
           label: 'Done',
-          actionType: ActionType.Default,
+          actionType: ActionType.SilentAction,
           color: HaboColors.primary,
         ),
         NotificationActionButton(
           key: 'SKIP',
           label: 'Skip',
-          actionType: ActionType.Default,
+          actionType: ActionType.SilentAction,
           color: HaboColors.skip,
         ),
       ];
@@ -200,17 +200,17 @@ Future<void> _setupHeadsUpNotification({
         NotificationActionButton(
           key: 'METER_LOW',
           label: '🔽 $lowLabel',
-          actionType: ActionType.Default,
+          actionType: ActionType.SilentAction,
         ),
         NotificationActionButton(
           key: 'METER_MID',
           label: '➡️ $midLabel',
-          actionType: ActionType.Default,
+          actionType: ActionType.SilentAction,
         ),
         NotificationActionButton(
           key: 'METER_HIGH',
           label: '🔼 $highLabel',
-          actionType: ActionType.Default,
+          actionType: ActionType.SilentAction,
         ),
       ];
       break;
@@ -220,7 +220,7 @@ Future<void> _setupHeadsUpNotification({
         NotificationActionButton(
           key: 'DIARY_REPLY',
           label: firstQuestion ?? '✍️ Write...',
-          actionType: ActionType.Default,
+          actionType: ActionType.SilentAction,
           requireInputText: true,
         ),
       ];
@@ -232,7 +232,7 @@ Future<void> _setupHeadsUpNotification({
         NotificationActionButton(
           key: 'DONE',
           label: '✓ Done',
-          actionType: ActionType.Default,
+          actionType: ActionType.SilentAction,
           color: HaboColors.primary,
         ),
       ];

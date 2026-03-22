@@ -80,6 +80,14 @@ class HabitsManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reloads all data from the database. 
+  /// Essential for syncing background isolate changes to the main UI.
+  Future<void> refresh() async {
+    await initModel();
+    await loadCategories();
+    notifyListeners();
+  }
+
   void hideSnackBar() {
     if (_uiFeedbackService != null) {
       _uiFeedbackService!.hideCurrentMessage();
@@ -182,7 +190,11 @@ class HabitsManager extends ChangeNotifier {
     //    (DateTime.utc with hour=12, matching how the calendar stores events)
     final normalizedDate = transformDate(date);
     debugPrint('[HabitsManager] Updating habit $habitId for date $normalizedDate with event $event');
-    habit.habitData.events[normalizedDate] = event;
+    
+    // Create a new map with the update to force the UI to recognize the change
+    final updatedEvents = SplayTreeMap<DateTime, List>.from(habit.habitData.events);
+    updatedEvents[normalizedDate] = event;
+    habit.habitData.events = updatedEvents;
 
     // 2. Persist to database
     _eventRepository.insertEvent(habitId, normalizedDate, event);
