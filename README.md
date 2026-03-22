@@ -2,7 +2,9 @@
 
 **Mebo** is a minimalistic, feature-rich habit tracker built with Flutter. It is designed to help you build good habits, visualize your progress, and stay consistent with gamified elements like **GitVille**.
 
-## ✨ Features
+
+
+## ✨ Features:
 
 - **Flexible Habit Tracking**: Support for various habit types to suit your needs:
   - **Boolean**: Simple Yes/No completion.
