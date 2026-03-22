@@ -22,6 +22,7 @@ import 'package:habo/generated/l10n.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:habo/constants.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:habo/services/notification_action_handler.dart';
 
 void main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,12 @@ void main() async {
     windowManager.setMaximumSize(Size.infinite);
   }
   addLicenses();
+  // Initialize notification system BEFORE runApp (required by awesome_notifications)
+  // Both calls are awaited to ensure the system is fully ready
+  if (platformSupportsNotifications()) {
+    await initializeNotifications();
+    await NotificationActionHandler.setupListeners();
+  }
   runApp(
     const Habo(),
   );
@@ -75,6 +82,7 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
       _startDayChangeTimer();
       if (_isInitialized) {
         _habitManager.checkDayChange();
+        _habitManager.refresh(); // Sync background isolate changes to UI
       }
     } else if (state == AppLifecycleState.paused) {
       _stopDayChangeTimer();
@@ -131,11 +139,11 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
     );
     await habitsManager.initialize();
 
-    if (platformSupportsNotifications()) {
-      initializeNotifications();
-    }
+    // Give the notification action handler access to habitsManager
+    // so button taps (Done/Skip/etc.) can write events to DB and update UI
+    NotificationActionHandler.initialize(habitsManager);
 
-    GoogleFonts.config.allowRuntimeFetching = false;
+    GoogleFonts.config.allowRuntimeFetching = true;
 
     // Create AppRouter with initialized habitsManager
     final appRouter = AppRouter(

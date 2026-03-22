@@ -15,6 +15,7 @@ import 'package:habo/services/notification_service.dart';
 import 'package:habo/services/ui_feedback_service.dart';
 import 'package:habo/services/home_widget_service.dart';
 import 'package:habo/helpers/widget_update_helper.dart';
+import 'package:habo/helpers.dart';
 
 class HabitsManager extends ChangeNotifier {
   final HabitRepository _habitRepository;
@@ -76,6 +77,14 @@ class HabitsManager extends ChangeNotifier {
   Future<void> initModel() async {
     allHabits = await _habitRepository.getAllHabits();
     _isInitialized = true;
+    notifyListeners();
+  }
+
+  /// Reloads all data from the database. 
+  /// Essential for syncing background isolate changes to the main UI.
+  Future<void> refresh() async {
+    await initModel();
+    await loadCategories();
     notifyListeners();
   }
 
@@ -167,6 +176,41 @@ class HabitsManager extends ChangeNotifier {
     _updateHomeWidgetAsync();
   }
 
+  /// Called from notification action buttons to complete a habit.
+  /// Unlike [addEvent], this also updates the in-memory events map
+  /// and calls [notifyListeners] so the UI refreshes automatically.
+  void completeHabitFromNotification(int habitId, DateTime date, List event) {
+    final habit = findHabitById(habitId);
+    if (habit == null) {
+      debugPrint('[NotificationAction] Habit $habitId not found in memory');
+      return;
+    }
+
+    // 1. Use transformDate to match the key format used everywhere else
+    //    (DateTime.utc with hour=12, matching how the calendar stores events)
+    final normalizedDate = transformDate(date);
+    debugPrint('[HabitsManager] Updating habit $habitId for date $normalizedDate with event $event');
+    
+    // Create a new map with the update to force the UI to recognize the change
+    final updatedEvents = SplayTreeMap<DateTime, List>.from(habit.habitData.events);
+    updatedEvents[normalizedDate] = event;
+    habit.habitData.events = updatedEvents;
+
+    // 2. Persist to database
+    _eventRepository.insertEvent(habitId, normalizedDate, event);
+
+    // 3. Handle notification rescheduling (push to tomorrow if done today)
+    _notificationService?.handleHabitEventAdded(habitId, normalizedDate, event);
+
+    // 4. Update home widget
+    _updateHomeWidgetAsync();
+
+    // 5. Rebuild the UI
+    notifyListeners();
+
+    debugPrint('[NotificationAction] Habit $habitId update sequence complete');
+  }
+
   void deleteEvent(int id, DateTime dateTime) {
     _eventRepository.deleteEvent(id, dateTime);
     _notificationService?.handleHabitEventDeleted(id, dateTime);
@@ -224,6 +268,7 @@ class HabitsManager extends ChangeNotifier {
       bool is24Hour = false,
       int color = 0,
       bool isSecret = false,
+      bool overlayReminder = false,
       List<TimeOfDay> reminders = const []}) {
     Habit newHabit = Habit(
       habitData: HabitData(
@@ -254,6 +299,7 @@ class HabitsManager extends ChangeNotifier {
         color: color,
         isSecret: isSecret,
         reminders: reminders,
+        overlayReminder: overlayReminder,
       ),
     );
     _habitRepository.createHabit(newHabit).then(
@@ -272,6 +318,9 @@ class HabitsManager extends ChangeNotifier {
               times: reminders.isNotEmpty ? reminders : [notTime],
               habitTitle: title,
               habitType: habitType,
+              meterMin: meterMin,
+              meterMax: meterMax,
+              firstQuestion: questions.isNotEmpty ? questions.first : null,
             );
           } else {
           _notificationService?.disableHabitNotification(id);
@@ -313,6 +362,7 @@ class HabitsManager extends ChangeNotifier {
     hab.habitData.color = habitData.color;
     hab.habitData.reminders = habitData.reminders;
     hab.habitData.isSecret = habitData.isSecret;
+    hab.habitData.overlayReminder = habitData.overlayReminder;
     _habitRepository.updateHabit(hab);
     if (habitData.notification) {
       _notificationService?.setSmartHabitNotification(
@@ -321,6 +371,9 @@ class HabitsManager extends ChangeNotifier {
         habitTitle: habitData.title,
         habitType: habitData.habitType,
         currentStreak: hab.habitData.streak,
+        meterMin: habitData.meterMin,
+        meterMax: habitData.meterMax,
+        firstQuestion: habitData.questions.isNotEmpty ? habitData.questions.first : null,
       );
     } else {
       _notificationService?.disableHabitNotification(habitData.id!);
@@ -383,6 +436,9 @@ class HabitsManager extends ChangeNotifier {
         habitTitle: habit.habitData.title,
         habitType: habit.habitData.habitType,
         currentStreak: habit.habitData.streak,
+        meterMin: habit.habitData.meterMin,
+        meterMax: habit.habitData.meterMax,
+        firstQuestion: habit.habitData.questions.isNotEmpty ? habit.habitData.questions.first : null,
       );
     }
 

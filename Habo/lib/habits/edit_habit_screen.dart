@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:habo/constants.dart';
@@ -76,6 +77,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
   bool isSecret = false;
   int selectedColor = 0;
   TextEditingController description = TextEditingController();
+  bool overlayReminder = false;
 
 
   Future<void> _addReminder() async {
@@ -258,6 +260,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
       if (reminders.isEmpty && notification) {
         reminders.add(notTime);
       }
+      overlayReminder = widget.habitData!.overlayReminder;
     } else {
       // New habit, set defaults
       questions = List.from(defaultQuestions);
@@ -441,6 +444,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     createdAt: widget.habitData!.createdAt,
                     color: selectedColor,
                     reminders: reminders,
+                    overlayReminder: overlayReminder,
                   );
                   final habitsManager =
                       Provider.of<HabitsManager>(context, listen: false);
@@ -479,6 +483,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     isSecret: isSecret,
                     color: selectedColor,
                     reminders: reminders,
+                    overlayReminder: overlayReminder,
                   );
                   // For new habits, we need to get the habit ID and then update categories
                   // This will be handled by updating the addHabit method to accept categories
@@ -553,6 +558,8 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                         ],
                       ),
                     ),
+
+                    const SizedBox(height: 5),
                     
                     // 24-hour task toggle
                     ListTile(
@@ -1086,7 +1093,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                           Checkbox(
                             onChanged: (bool? value) {
                               setState(() {
-                                twoDayRule = value!;
+                                twoDayRule = value ?? false;
                               });
                             },
                             value: twoDayRule,

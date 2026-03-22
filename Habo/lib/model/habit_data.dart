@@ -37,6 +37,7 @@ class HabitData {
     this.color = 0,
     this.reminders = const [],
     this.isSecret = false,
+    this.overlayReminder = false,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -99,6 +100,9 @@ class HabitData {
 
   // Custom color for the habit (0 = default theme color)
   int color;
+
+  // New feature: overlay reminder toggle
+  bool overlayReminder;
 
   // Helper methods for habit types
   bool get isNumeric => habitType == HabitType.numeric;

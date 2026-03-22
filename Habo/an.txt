@@ -1,0 +1,50 @@
+﻿Analyzing Habo...                                               
+
+warning - Unused import: 'package:habo/habits/habit.dart' - lib\habits\calendar_column.dart:5:8 - unused_import
+warning - Unused import: 'package:habo/constants.dart' - lib\habits\diary_entry_screen.dart:3:8 - unused_import
+warning - Unused import: 'package:habo/generated/l10n.dart' - lib\habits\diary_entry_screen.dart:4:8 - unused_import
+   info - The private field _controllers could be 'final' - lib\habits\diary_entry_screen.dart:33:38 - prefer_final_fields
+   info - Unnecessary use of string interpolation - lib\habits\diary_entry_screen.dart:73:21 - unnecessary_string_interpolations
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\habits\diary_entry_screen.dart:131:82 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\habits\diary_entry_screen.dart:134:75 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\habits\diary_entry_screen.dart:145:81 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\habits\diary_entry_screen.dart:179:87 - deprecated_member_use
+warning - Unused import: 'dart:collection' - lib\habits\edit_habit_screen.dart:1:8 - unused_import
+warning - The declaration '_showArchivedHabitsDialog' isn't referenced - lib\habits\habits_screen.dart:97:8 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\habits\one_day_button.dart:237:57 - deprecated_member_use
+warning - Unused import: 'package:habo/constants.dart' - lib\habits\secret_habits_screen.dart:3:8 - unused_import
+warning - Unused import: 'package:habo/generated/l10n.dart' - lib\habits\secret_habits_screen.dart:4:8 - unused_import
+warning - Unused import: 'package:habo/habits/habits_manager.dart' - lib\habits\secret_habits_screen.dart:6:8 - unused_import
+warning - Unused import: 'dart:ui' - lib\location\city_generator.dart:4:8 - unused_import
+warning - Unused import: 'package:habo/model/habit_data.dart' - lib\location\city_generator.dart:8:8 - unused_import
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\location\city_generator.dart:248:32 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\location\local_server.dart:54:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\location\local_server.dart:75:5 - avoid_print
+warning - The declaration '_createTableHabitsV6' isn't referenced - lib\model\habo_model.dart:249:8 - unused_element
+warning - The declaration '_createTableHabitsV10' isn't referenced - lib\model\habo_model.dart:278:8 - unused_element
+warning - The declaration '_createTableHabitsV13' isn't referenced - lib\model\habo_model.dart:330:8 - unused_element
+warning - Unused import: 'package:habo/onboarding/onboarding_screen.dart' - lib\navigation\app_router.dart:8:8 - unused_import
+warning - The value of the local variable 'lastValue' isn't used - lib\statistics\trend_line_chart.dart:98:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\statistics\trend_line_chart.dart:156:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\statistics\trend_line_chart.dart:162:22 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\statistics\trend_line_chart.dart:174:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\statistics\trend_line_chart.dart:217:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\hour_24_stories.dart:101:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\hour_24_stories.dart:102:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\hour_24_stories.dart:107:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\hour_24_stories.dart:129:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\hour_24_stories.dart:184:23 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\meter_input_modal.dart:88:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\meter_input_modal.dart:90:48 - deprecated_member_use
+  error - The name 'MyApp' isn't a class - test\widget_test.dart:16:35 - creation_with_non_type
+
+flutter : 37 issues found. (ran in 8.3s)
+At line:1 char:1
++ flutter analyze --no-pub 2>&1 | Out-File 
+C:\Users\sbava\OneDrive\Docu ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (37 is 
+   sues found. (ran in 8.3s):String) [], RemoteEx  
+  ception
+    + FullyQualifiedErrorId : NativeCommandError
+ 
