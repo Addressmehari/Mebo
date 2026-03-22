@@ -13,6 +13,8 @@ import 'package:habo/statistics/statistics_screen.dart';
 import 'package:habo/whats_new/whats_new_screen.dart';
 import 'package:habo/location/location_screen.dart';
 import 'package:habo/habits/secret_habits_screen.dart';
+import 'package:habo/vault/vault_screen.dart';
+import 'package:habo/vault/folder_detail_screen.dart';
 
 class AppRouter extends RouterDelegate<HaboRouteConfiguration>
     with
@@ -65,6 +67,9 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
         if (appStateManager.getEditHabit != null)
           EditHabitScreen.page(appStateManager.getEditHabit!),
         if (appStateManager.getLocation) LocationScreen.page(),
+        if (appStateManager.getVault) VaultScreen.page(),
+        if (appStateManager.getVaultFolderId != null)
+          FolderDetailScreen.page(appStateManager.getVaultFolderId!),
         if (!allInitialized()) SplashScreen.page(),
       ],
     );
@@ -111,6 +116,14 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
       if (page.name == Routes.secretHabitsPath) {
         appStateManager.goSecretHabits(false);
       }
+
+      if (page.name == Routes.vaultPath) {
+        appStateManager.goVault(false);
+      }
+
+      if (page.name == Routes.folderPath) {
+        appStateManager.goVaultFolder(null);
+      }
     });
   }
 
@@ -146,6 +159,12 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
     }
     if (appStateManager.getOnboarding) {
       return const HaboRouteConfiguration(path: '/onboarding');
+    }
+    if (appStateManager.getVault) {
+      return const HaboRouteConfiguration(path: '/vault');
+    }
+    if (appStateManager.getVaultFolderId != null) {
+      return HaboRouteConfiguration(path: '/folder/${appStateManager.getVaultFolderId}');
     }
     return const HaboRouteConfiguration(path: '/');
   }
@@ -193,6 +212,13 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
           break;
         case '/location':
           appStateManager.goLocation(true);
+          break;
+        case '/vault':
+          appStateManager.goVault(true);
+          break;
+        case '/folder':
+          // For folder deep links, might need /folder/123 handling
+          appStateManager.goVault(true);
           break;
         case '/':
         case '/main':

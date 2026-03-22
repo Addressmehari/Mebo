@@ -192,6 +192,34 @@ class _HabitsScreenState extends State<HabitsScreen> {
                       .goLocation(true);
                 },
               ),
+              IconButton(
+                icon: const Icon(
+                  Icons.folder_shared_outlined,
+                  size: 20,
+                  semanticLabel: 'Vault',
+                ),
+                color: Colors.blueGrey,
+                tooltip: 'Vault',
+                onPressed: () {
+                  Provider.of<AppStateManager>(context, listen: false)
+                      .goVault(true);
+                  Provider.of<HabitsManager>(context, listen: false)
+                      .hideSnackBar();
+                },
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.archive_outlined,
+                  size: 20,
+                ),
+                color: Colors.blueGrey,
+                tooltip: S.of(context).archivedHabits,
+                onPressed: () {
+                  _showArchivedHabitsDialog(context);
+                  Provider.of<HabitsManager>(context, listen: false)
+                      .hideSnackBar();
+                },
+              ),
 
 
               IconButton(
