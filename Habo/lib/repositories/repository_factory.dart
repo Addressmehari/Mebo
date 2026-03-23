@@ -7,6 +7,8 @@ import 'sqlite_habit_repository.dart';
 import 'sqlite_event_repository.dart';
 import 'sqlite_backup_repository.dart';
 import 'sqlite_category_repository.dart';
+import 'vault_repository.dart';
+import 'sqlite_vault_repository.dart';
 
 /// Factory for creating repository instances.
 /// Provides centralized repository creation and dependency injection.
@@ -17,12 +19,14 @@ class RepositoryFactory {
   late final EventRepository _eventRepository;
   late final BackupRepository _backupRepository;
   late final CategoryRepository _categoryRepository;
+  late final VaultRepository _vaultRepository;
 
   RepositoryFactory(this._haboModel) {
     _habitRepository = SQLiteHabitRepository(_haboModel);
     _eventRepository = SQLiteEventRepository(_haboModel);
     _backupRepository = SQLiteBackupRepository(_haboModel);
     _categoryRepository = SQLiteCategoryRepository(_haboModel);
+    _vaultRepository = SqliteVaultRepository(_haboModel);
   }
 
   /// Gets the habit repository instance.
@@ -36,6 +40,9 @@ class RepositoryFactory {
 
   /// Gets the category repository instance.
   CategoryRepository get categoryRepository => _categoryRepository;
+
+  /// Gets the vault repository instance.
+  VaultRepository get vaultRepository => _vaultRepository;
 
   /// Disposes all repository instances.
   void dispose() {

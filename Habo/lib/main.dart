@@ -11,6 +11,7 @@ import 'package:habo/notifications.dart';
 import 'package:habo/services/service_locator.dart';
 import 'package:habo/model/habo_model.dart';
 import 'package:habo/widgets/biometric_auth_wrapper.dart';
+import 'package:habo/vault/vault_manager.dart';
 
 import 'package:habo/settings/settings_manager.dart';
 import 'package:habo/navigation/app_router.dart';
@@ -55,6 +56,7 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
   final _appStateManager = AppStateManager();
   final _settingsManager = SettingsManager();
   late HabitsManager _habitManager;
+  late VaultManager _vaultManager;
   late AppRouter _appRouter;
   final _navigatorKey = GlobalKey<NavigatorState>();
   final _scaffoldKey = GlobalKey<ScaffoldMessengerState>();
@@ -139,9 +141,14 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
     );
     await habitsManager.initialize();
 
+    // Create VaultManager
+    final vaultManager = VaultManager(repositoryFactory.vaultRepository);
+    await vaultManager.initialize();
+
     // Give the notification action handler access to habitsManager
     // so button taps (Done/Skip/etc.) can write events to DB and update UI
     NotificationActionHandler.initialize(habitsManager);
+
 
     GoogleFonts.config.allowRuntimeFetching = true;
 
@@ -155,6 +162,7 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
 
     setState(() {
       _habitManager = habitsManager;
+      _vaultManager = vaultManager;
       _appRouter = appRouter;
       _isInitialized = true;
     });
@@ -201,6 +209,9 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
         ),
         ChangeNotifierProvider(
           create: (context) => _habitManager,
+        ),
+        ChangeNotifierProvider(
+          create: (context) => _vaultManager,
         ),
       ],
       child: Consumer<SettingsManager>(builder: (context, settingsManager, _) {

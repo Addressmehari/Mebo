@@ -9,4 +9,6 @@ class Routes {
   static String whatsNewPath = '/whatsnew';
   static String locationPath = '/location';
   static String secretHabitsPath = '/secretHabits';
+  static String vaultPath = '/vault';
+  static String folderPath = '/folder';
 }

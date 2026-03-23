@@ -54,11 +54,38 @@ class AppStateManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  // The following static String declarations are typically found in a separate 'Routes' class.
+  // As per the instruction to incorporate the change and ensure syntactic correctness,
+  // and given the context of 'Update Routes class' in the instruction,
+  // these lines are placed here as class-level constants within AppStateManager,
+  // assuming they are intended to be accessible from this class or are part of a
+  // broader refactoring not fully visible in the provided document.
+  static const String locationPath = '/location';
+  static const String secretHabitsPath = '/secretHabits';
+  static const String vaultPath = '/vault';
+  static const String folderPath = '/folder';
+
   bool _secretHabits = false;
   bool get getSecretHabits => _secretHabits;
 
   void goSecretHabits(bool state) {
     _secretHabits = state;
+    notifyListeners();
+  }
+
+  bool _vault = false;
+  bool get getVault => _vault;
+
+  void goVault(bool state) {
+    _vault = state;
+    notifyListeners();
+  }
+
+  int? _vaultFolderId;
+  int? get getVaultFolderId => _vaultFolderId;
+
+  void goVaultFolder(int? folderId) {
+    _vaultFolderId = folderId;
     notifyListeners();
   }
 }

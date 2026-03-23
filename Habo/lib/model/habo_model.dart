@@ -15,7 +15,7 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
 
 class HaboModel {
-  static const _dbVersion = 14;
+  static const _dbVersion = 15;
   Database? _db;
 
   Database get db {
@@ -620,7 +620,31 @@ class HaboModel {
     _createTableEventsV4(batch);
     _createTableCategoriesV7(batch); // Use V7 with fontFamily column
     _createTableHabitCategoriesV5(batch);
+    _createTableVaultFoldersV15(batch);
+    _createTableVaultFilesV15(batch);
     batch.commit();
+  }
+
+  void _createTableVaultFoldersV15(Batch batch) {
+    batch.execute('''CREATE TABLE IF NOT EXISTS vault_folders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    iconCode INTEGER
+    )''');
+  }
+
+  void _createTableVaultFilesV15(Batch batch) {
+    batch.execute('''CREATE TABLE IF NOT EXISTS vault_files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    folder_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    localPath TEXT NOT NULL,
+    fileType TEXT NOT NULL,
+    sizeInBytes INTEGER NOT NULL,
+    createdAt TEXT NOT NULL,
+    FOREIGN KEY (folder_id) REFERENCES vault_folders(id) ON DELETE CASCADE
+    )''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -694,6 +718,14 @@ class HaboModel {
     // Handle isSecret field
     if (oldVersion < 14) {
       await _updateTableHabitsAddIsSecret(db);
+    }
+
+    // Handle vault tables addition (v15)
+    if (oldVersion < 15) {
+      var vaultBatch = db.batch();
+      _createTableVaultFoldersV15(vaultBatch);
+      _createTableVaultFilesV15(vaultBatch);
+      await vaultBatch.commit();
     }
   }
 
@@ -793,6 +825,31 @@ class HaboModel {
         debugPrint(e.toString());
       }
     }
+  }
+
+  Future<int> insertVaultFolder(Map<String, dynamic> folder) async {
+    return await db.insert('vault_folders', folder);
+  }
+
+  Future<void> deleteVaultFolder(int id) async {
+    await db.delete('vault_folders', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllVaultFolders() async {
+    return await db.query('vault_folders', orderBy: 'name');
+  }
+
+  Future<int> insertVaultFile(Map<String, dynamic> file) async {
+    return await db.insert('vault_files', file);
+  }
+
+  Future<void> deleteVaultFile(int id) async {
+    await db.delete('vault_files', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Map<String, dynamic>>> getVaultFilesForFolder(int folderId) async {
+    return await db.query('vault_files',
+        where: 'folder_id = ?', whereArgs: [folderId], orderBy: 'createdAt DESC');
   }
 
   Future<void> deleteCategory(int id) async {
