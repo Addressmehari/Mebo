@@ -94,58 +94,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     }
   }
 
-  void _showArchivedHabitsDialog(BuildContext context) {
-    final habitsManager = Provider.of<HabitsManager>(context, listen: false);
-    final archivedHabits = habitsManager.archivedHabits;
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(S.of(context).archivedHabits),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 300,
-            child: archivedHabits.isEmpty
-                ? Center(
-                    child: Text(
-                      S.of(context).noArchivedHabits,
-                      style: const TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: archivedHabits.length,
-                    itemBuilder: (context, index) {
-                      final habit = archivedHabits[index];
-                      return ListTile(
-                        title: Text(habit.habitData.title),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.unarchive),
-                          onPressed: () {
-                            habitsManager.unarchiveHabit(habit.habitData.id!);
-                            Navigator.of(context).pop();
-                          },
-                          tooltip: S.of(context).unarchiveHabit,
-                        ),
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          Provider.of<AppStateManager>(context, listen: false)
-                              .goEditHabit(habit.habitData);
-                        },
-                      );
-                    },
-                  ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -207,19 +156,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                       .hideSnackBar();
                 },
               ),
-              IconButton(
-                icon: const Icon(
-                  Icons.archive_outlined,
-                  size: 20,
-                ),
-                color: Colors.blueGrey,
-                tooltip: S.of(context).archivedHabits,
-                onPressed: () {
-                  _showArchivedHabitsDialog(context);
-                  Provider.of<HabitsManager>(context, listen: false)
-                      .hideSnackBar();
-                },
-              ),
+
 
 
               IconButton(
