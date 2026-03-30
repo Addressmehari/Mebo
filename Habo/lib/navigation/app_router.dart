@@ -4,6 +4,7 @@ import 'package:habo/habits/habits_manager.dart';
 import 'package:habo/habits/habits_screen.dart';
 import 'package:habo/navigation/app_state_manager.dart';
 import 'package:habo/navigation/routes.dart';
+import 'package:habo/habits/alarm_screen.dart';
 import 'package:habo/navigation/route_information_parser.dart';
 import 'package:habo/onboarding/onboarding_screen.dart';
 import 'package:habo/settings/settings_manager.dart';
@@ -70,6 +71,8 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
         if (appStateManager.getVault) VaultScreen.page(),
         if (appStateManager.getVaultFolderId != null)
           FolderDetailScreen.page(appStateManager.getVaultFolderId!),
+        if (appStateManager.getAlarmHabitId != null)
+          AlarmScreen.page(habitId: appStateManager.getAlarmHabitId!),
         if (!allInitialized()) SplashScreen.page(),
       ],
     );
@@ -124,6 +127,10 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
       if (page.name == Routes.folderPath) {
         appStateManager.goVaultFolder(null);
       }
+
+      if (page.name == Routes.alarmPath) {
+        appStateManager.goAlarm(null);
+      }
     });
   }
 
@@ -165,6 +172,9 @@ class AppRouter extends RouterDelegate<HaboRouteConfiguration>
     }
     if (appStateManager.getVaultFolderId != null) {
       return HaboRouteConfiguration(path: '/folder/${appStateManager.getVaultFolderId}');
+    }
+    if (appStateManager.getAlarmHabitId != null) {
+      return const HaboRouteConfiguration(path: '/alarm');
     }
     return const HaboRouteConfiguration(path: '/');
   }

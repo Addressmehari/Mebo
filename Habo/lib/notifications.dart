@@ -247,8 +247,8 @@ Future<void> _setupHeadsUpNotification({
       body: body,
       wakeUpScreen: true,
       criticalAlert: true,
-      fullScreenIntent: true,
-      category: NotificationCategory.Alarm,
+      fullScreenIntent: habitType != HabitType.savings,
+      category: habitType == HabitType.savings ? NotificationCategory.Reminder : NotificationCategory.Alarm,
       payload: {
         'habitType': habitType.toString().split('.').last,
         'habitId': id.toString(),

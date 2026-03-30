@@ -11,4 +11,5 @@ class Routes {
   static String secretHabitsPath = '/secretHabits';
   static String vaultPath = '/vault';
   static String folderPath = '/folder';
+  static String alarmPath = '/alarm';
 }

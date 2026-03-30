@@ -6,17 +6,20 @@ import 'package:habo/habits/habits_manager.dart';
 import 'package:habo/habits/habit.dart';
 import 'package:habo/model/habo_model.dart';
 import 'package:habo/helpers.dart';
+import 'package:habo/navigation/app_state_manager.dart';
 import 'package:habo/notifications.dart' as notifications;
 
 /// Handles notification action button presses and inline replies.
 class NotificationActionHandler {
   static HabitsManager? _habitsManager;
+  static AppStateManager? _appStateManager;
   static final List<ReceivedAction> _actionQueue = [];
 
   /// Must be called once during app initialization.
-  static void initialize(HabitsManager habitsManager) {
+  static void initialize(HabitsManager habitsManager, AppStateManager appStateManager) {
     _habitsManager = habitsManager;
-    debugPrint('[NotificationAction] Handler initialized with HabitsManager');
+    _appStateManager = appStateManager;
+    debugPrint('[NotificationAction] Handler initialized with Managers');
     
     if (_actionQueue.isNotEmpty) {
       debugPrint('[NotificationAction] Processing ${_actionQueue.length} queued actions');
@@ -75,6 +78,19 @@ class NotificationActionHandler {
     }
 
     // ───── Foreground Handling ─────
+    
+    // Handle body tap (no button key)
+    if (buttonKey.isEmpty) {
+      if (_appStateManager != null) {
+        debugPrint('[NotificationAction] Body tap detected, navigating to AlarmScreen');
+        _appStateManager!.goAlarm(actualHabitId);
+      } else {
+        debugPrint('[NotificationAction] Queuing action because AppStateManager is null');
+        _actionQueue.add(receivedAction);
+      }
+      return;
+    }
+
     switch (buttonKey) {
       case 'DONE':
         _habitsManager!.completeHabitFromNotification(actualHabitId, today, [DayType.check, '']);

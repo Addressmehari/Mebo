@@ -145,9 +145,9 @@ class _HaboState extends State<Habo> with WidgetsBindingObserver {
     final vaultManager = VaultManager(repositoryFactory.vaultRepository);
     await vaultManager.initialize();
 
-    // Give the notification action handler access to habitsManager
-    // so button taps (Done/Skip/etc.) can write events to DB and update UI
-    NotificationActionHandler.initialize(habitsManager);
+    // Give the notification action handler access to managers
+    // so button taps and body taps can be handled correctly
+    NotificationActionHandler.initialize(habitsManager, _appStateManager);
 
 
     GoogleFonts.config.allowRuntimeFetching = true;
